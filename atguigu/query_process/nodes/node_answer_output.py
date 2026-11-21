@@ -40,7 +40,9 @@ class NodeAnswerOutput(NodeBase):
         message_id = None
         if answer:
             put_data(task_id, event="final", data={"answer": answer})
-            return {"message_id": message_id}
+            # 把 answer 一起返回：流式调用方继续看 SSE，
+            # 评估脚本/非流式调用方可以直接从 state 里拿最终答案。
+            return {"answer": answer, "message_id": message_id}
 
         # 1. 把重排后的资料拼成带编号的上下文。
         #    编号是为了让模型能引用 [1]、[2]，也方便后续做引用校验。
@@ -108,7 +110,9 @@ class NodeAnswerOutput(NodeBase):
                 item_names=item_names,
             )
 
+        # 同上：评估和调试时需要拿到完整答案，而不仅是 message_id
         return {
-            "message_id": message_id
+            "answer": answer,
+            "message_id": message_id,
         }
 
