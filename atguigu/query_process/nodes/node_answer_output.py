@@ -1,4 +1,5 @@
 # atguigu/query_process/nodes/node_answer_output.py
+import os
 import re
 
 from langchain.chat_models import init_chat_model
@@ -35,6 +36,11 @@ class NodeAnswerOutput(NodeBase):
         item_names = state.get("item_names") or []
         rewritten_query = state.get("rewritten_query") or ""
         session_id = state.get("session_id")
+
+        # 评估的 retrieval 模式只需要 reranked_docs，不需要花 token 生成答案。
+        # run_eval.py 会设置 EVAL_SKIP_ANSWER=1；生产/手动调用不受影响。
+        if os.getenv("EVAL_SKIP_ANSWER") == "1":
+            return {"answer": answer}
 
         # 拒答/待选词已经在商品名确认节点生成过，这里只负责推给前端，不再调模型
         message_id = None

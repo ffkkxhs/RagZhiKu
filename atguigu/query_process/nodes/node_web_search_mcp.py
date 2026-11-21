@@ -1,6 +1,7 @@
 # atguigu/query_process/nodes/node_web_search_mcp.py
 import asyncio
 import json
+import os
 
 from atguigu.config.config import MCPConfig
 from atguigu.query_process.base import NodeBase
@@ -24,6 +25,13 @@ class NodeWebSearchMcp(NodeBase):
         :param state: 工作流状态对象
         :return: 更新后的状态对象
         """
+
+        # 评估时默认关闭 Web 搜索：
+        # - 它会带来额外的外部调用成本；
+        # - 网页结果噪音较大，会干扰“检索改造是否有效”的判断。
+        # run_eval.py 会设置 EVAL_DISABLE_WEB=1；生产/手动调用不受影响。
+        if os.getenv("EVAL_DISABLE_WEB") == "1":
+            return {"web_search_docs": []}
 
         rewritten_query = state.get("rewritten_query")
 
