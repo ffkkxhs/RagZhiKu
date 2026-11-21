@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>example1</title>
+</head>
+<body>
+
+    <h2>标题</h2>
+    <button id="btn">按钮</button>
+    <div id = "content">
+    </div>
+
+    <script>
+        const btn =document.getElementById("btn")
+        btn.onclick = async function(){
+            const res = await fetch("http://localhost:8000/startwork/123456")
+            const data = res.json()
+            console.log(data)
+
+            const es = new EventSource("http://localhost:8000/sse01?session_id=123456")
+            es.onmessage = function (e){
+                console.log(e.data)
+                if (e.data === "None"){
+                    es.close()
+                }else{
+                    const contentDiv = document.getElementById("content")
+                    contentDiv.innerHTML += e.data + "<br>"
+                }
+
+            }
+
+        }
+
+    </script>
+
+</body>
+</html>

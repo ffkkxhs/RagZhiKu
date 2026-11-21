@@ -1,0 +1,28 @@
+# ===== 环境变量（里面是 API Key，绝对不能提交）=====
+.env
+.env.*
+!.env.example
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# ===== 虚拟环境 =====
+.venv/
+venv/
+
+# ===== IDE =====
+.idea/
+.vscode/
+
+# ===== 运行产物：PDF 解析结果、切片、向量、图片等，重跑一遍就能生成 =====
+res/
+
+# ===== 系统/临时文件 =====
+*.log
+*.tmp
+.DS_Store
+Thumbs.db

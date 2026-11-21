@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body>
+    <h2>3333333</h2>
+    <input type="text" id="sessionId"> <br>
+    <input type="text" id="query"> <br>
+
+
+    <button id="btn">
+        按钮
+    </button>
+    <div id="content">
+
+    </div>
+
+    <script>
+        const btn = document.getElementById("btn")
+
+        btn.onclick = async function(){
+            const session_id = document.getElementById("sessionId").value
+            const query = document.getElementById("query").value
+
+            const res = await fetch("http://localhost:8000/startwork",{
+                method:"POST",
+                headers:{
+                    "content-type":"application/json"
+                },
+                body:JSON.stringify({
+                    session_id,
+                    query
+                })
+            })
+
+            const data = await res.json()
+            console.log(data)
+
+            const es =  new EventSource(`http://localhost:8000/sse02?session_id=${session_id}`)
+
+            es.addEventListener("progress",function (e){
+                const divNode = document.getElementById("content")
+                divNode.innerHTML += e.data + "<br>"
+            })
+
+            es.addEventListener("final",function (e){
+                const divNode = document.getElementById("content")
+                divNode.innerHTML += e.data + "<br>"
+                es.close()
+            })
+
+            es.addEventListener("error",function (e){
+                const divNode = document.getElementById("content")
+                divNode.innerHTML += e.data + "<br>"
+                es.close()
+            })
+
+
+
+        }
+
+    </script>
+</body>
+
+</html>
