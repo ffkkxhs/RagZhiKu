@@ -67,6 +67,45 @@ class NodeImportMilvus(NodeBase):
                 datatype = DataType.VARCHAR,
                 max_length = 100,
             ).add_field(
+                # ============================================================
+                # 【改造说明：把“标题层级”和“通用元数据”变成一等字段】
+                #
+                # 原 schema 只有 title/content/part，chunk 丢了父级标题路径，
+                # 也拿不到城市/书名/课程名等结构化信息。
+                # 新 schema 增加：
+                # - title_path：完整标题路径，例如“成都景点推荐 > 核心景点推荐 > 都江堰”
+                # - level：标题层级，H1=1 / H2=2 / H3=3
+                # - parent_id：父级路径，后续做父块回捞时用
+                # - section_id：章节稳定 ID
+                # - chunk_id：chunk 稳定 ID，方便去重和引用
+                # - metadata：JSON 字段，存任意领域的元数据（城市/书名/课程名/别名...）
+                #
+                # 这些都是通用字段，不绑定旅游或商品；换领域不需要改 schema。
+                # 注意：Milvus 不支持直接给已有集合加字段，
+                # 旧集合需要删除后重新导入（下面有明确检查）。
+                # ============================================================
+                field_name="title_path",
+                datatype=DataType.VARCHAR,
+                max_length=1000,
+            ).add_field(
+                field_name="level",
+                datatype=DataType.INT64,
+            ).add_field(
+                field_name="parent_id",
+                datatype=DataType.VARCHAR,
+                max_length=500,
+            ).add_field(
+                field_name="section_id",
+                datatype=DataType.VARCHAR,
+                max_length=100,
+            ).add_field(
+                field_name="chunk_id",
+                datatype=DataType.VARCHAR,
+                max_length=100,
+            ).add_field(
+                field_name="metadata",
+                datatype=DataType.JSON,
+            ).add_field(
                 field_name = "dense_vector",
                 datatype = DataType.FLOAT_VECTOR,
                 dim = 1024
@@ -93,7 +132,8 @@ class NodeImportMilvus(NodeBase):
                 index_name = "dense_vector_index",
                 metric_type = "COSINE",
                 params = {
-                    "nprobe": 10,
+                    # nprobe 是检索参数，不是建索引参数；
+                    # 建 IVF_FLAT 索引只需要 nlist，nprobe 应放到查询侧。
                     "nlist": 128,
                 }
             )
@@ -103,6 +143,24 @@ class NodeImportMilvus(NodeBase):
                 schema = schema,
                 index_params =index
             )
+
+        else:
+            # 【改造说明】旧集合没有新字段时，insert 会报错。
+            # 这里提前检查并给出可操作的提示，而不是让用户看 Milvus 底层异常。
+            fields = {
+                field["name"]
+                for field in client.describe_collection(collection_name).get("fields", [])
+            }
+            required_fields = {
+                "title_path", "level", "parent_id",
+                "section_id", "chunk_id", "metadata",
+            }
+            missing = required_fields - fields
+            if missing:
+                raise RuntimeError(
+                    f"集合 {collection_name} 缺少字段 {sorted(missing)}；"
+                    "Milvus 不支持直接加字段，请删除该集合后重新导入。"
+                )
 
         client.load_collection(collection_name)
 

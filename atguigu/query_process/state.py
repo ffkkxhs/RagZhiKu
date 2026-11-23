@@ -28,6 +28,14 @@ class QueryGraphState(TypedDict):
     answer: str  # 最终生成的答案
 
     # 辅助信息
-    item_names: List[str]  # 提取出的商品名称
+    item_names: List[str]  # 提取出的主体名称
     rewritten_query: str  # 改写后的问题
     history: list  # 历史对话记录
+
+    # ========================================================================
+    # 【改造说明：软过滤开关】
+    # - strict_filter=True：主体名确认得很确定，检索时用 item_name 做硬过滤；
+    # - strict_filter=False：只做到候选级别，过滤会误伤，检索时放宽，让 rerank 决定。
+    # 这样既保留“精确过滤”的收益，又不会因为一次不确定的识别把整条查询短路。
+    # ========================================================================
+    strict_filter: bool

@@ -55,7 +55,8 @@ class NodeAnswerOutput(NodeBase):
         content_parts = []
         for idx, doc in enumerate(reranked_docs, start=1):
             content_parts.append(
-                f"[{idx}] 标题：{doc.get('title') or ''}\n"
+                # 优先用 title_path，引用能精确到“文档 > 章节 > 小节”
+                f"[{idx}] 标题：{doc.get('title_path') or doc.get('title') or ''}\n"
                 f"来源：{doc.get('source') or ''} {doc.get('url') or ''}\n"
                 f"内容：{doc.get('content') or ''}"
             )

@@ -184,11 +184,34 @@ def run_case(case, mode):
 
     answer = result.get("answer") or ""
 
+    # ========================================================================
+    # 【改造说明：区分“待选词/拒答/正常召回/无结果”四条路径】
+    #
+    # 之前所有 case 都是 status=ok，导致“主体名待选词”和“检索失败”
+    # 混在一起算平均分，看起来像检索效果很差。
+    #
+    # 这里额外记录 outcome：
+    # - clarification：返回待选词，流程在确认阶段就停了；
+    # - rejection：明确拒答；
+    # - retrieved：正常进入检索并拿到候选；
+    # - no_result：检索为空。
+    # 报告里可以分开看，避免误判。
+    # ========================================================================
+    if answer.startswith("待选词"):
+        outcome = "clarification"
+    elif "没有识别到" in answer:
+        outcome = "rejection"
+    elif retrieved:
+        outcome = "retrieved"
+    else:
+        outcome = "no_result"
+
     row = {
         "id": case["id"],
         "type": case.get("type", "unknown"),
         "question": case["question"],
         "status": "ok",
+        "outcome": outcome,
         # 记录是否本来就是拒答题，报告里不会把“gold 为空”误判成 bad case
         "expect_refusal": case.get("expect_refusal", False),
         "item_names": result.get("item_names") or [],
@@ -261,6 +284,11 @@ def summarize(rows, mode, dataset_path):
         "judge_citation",
     ]
 
+    # 按“路径”统计：待选词/拒答/正常召回/无结果
+    outcomes = defaultdict(int)
+    for row in rows:
+        outcomes[row.get("outcome", row.get("status", "unknown"))] += 1
+
     summary = {
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "mode": mode,
@@ -269,6 +297,7 @@ def summarize(rows, mode, dataset_path):
         "evaluated": len(evaluated),
         "skipped": len(skipped),
         "errors": len(errors),
+        "outcomes": dict(outcomes),
         "overall": {},
         "by_type": {},
     }

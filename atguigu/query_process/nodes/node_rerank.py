@@ -18,6 +18,8 @@ class NodeRerank(NodeBase):
         rrf_chunks = state.get("rrf_chunks")
         web_search_docs = state.get("web_search_docs")
         rewritten_query = state.get("rewritten_query")
+        item_names = state.get("item_names") or []
+        strict_filter = state.get("strict_filter", True)
 
         # 用 **item 保留 id / item_name / file_title / part，答案节点才能标来源；
         # 只对缺失的展示字段做兜底，不要把原有字段整体替换掉。
@@ -64,8 +66,37 @@ class NodeRerank(NodeBase):
                 break_idx = i + 1
                 break
 
+        selected = rerank_chunks[:break_idx]
+
+        # ================================================================
+        # 【改造说明：多主体查询保证每个主体至少保留一条证据】
+        #
+        # 对比题（“A 和 B 哪个更适合…”）如果只按全局分数截断，
+        # A 的片段得分高时会把 B 的片段整段截掉，答案就只能拿 A 说话。
+        #
+        # 这里在断层截断之后做一次补偿：
+        # - 每个 item_name 至少保留一条 chunk；
+        # - 已经存在的就不重复加；
+        # - 只在 strict_filter=True（主体名确认得很确定）时启用；
+        #   如果 item_names 只是 0.6~0.8 的候选，强行补配额会把无关候选塞进来。
+        # - 这是通用策略，不依赖具体领域。
+        # ================================================================
+        if strict_filter and len(item_names) > 1:
+            selected_ids = {chunk.get("id") for chunk in selected}
+            for item_name in item_names:
+                if any(chunk.get("item_name") == item_name for chunk in selected):
+                    continue
+                for chunk in rerank_chunks:
+                    if (
+                        chunk.get("item_name") == item_name
+                        and chunk.get("id") not in selected_ids
+                    ):
+                        selected.append(chunk)
+                        selected_ids.add(chunk.get("id"))
+                        break
+
         return {
-            "reranked_docs": rerank_chunks[:break_idx],
+            "reranked_docs": selected,
         }
 
 

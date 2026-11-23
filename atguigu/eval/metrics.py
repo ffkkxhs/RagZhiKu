@@ -178,6 +178,23 @@ def ndcg_at_k(
     这里用最简单的一档相关性：
     命中标准答案 = 1，没命中 = 0。
 
+    # ========================================================================
+    # 【改造说明：每条 gold 只让第一次命中的结果计分】
+    #
+    # 旧实现的问题：
+    # - 当前测试集是“文档级 gold”（gold 标题为空）；
+    # - 同一文档的多个 chunk 都会被 is_match 判成相关；
+    # - 但 IDCG 只按 len(gold)=1 算理想值；
+    # - 结果 nDCG 会算到 3、4，超过 1，完全不可信。
+    #
+    # 新实现：
+    # - 用 used_gold 记录哪些 gold 已经被命中；
+    # - 每条 gold 只让第一次命中的结果得分，后面的同文档 chunk 不再重复计分；
+    # - 这样 DCG 不会超过 IDCG，nDCG 稳定在 0~1。
+    #
+    # 这是通用修正：文档级 gold 和章节级 gold 都适用。
+    # ========================================================================
+
     和 MRR 的区别：
     - MRR 只看第一个正确结果；
     - nDCG 会考虑多个正确结果的整体排序质量。
@@ -190,12 +207,28 @@ def ndcg_at_k(
     返回：
     - 0~1 的浮点数
     """
-    dcg = 0.0
+    used_gold = set()
+    relevance_flags = []
 
-    for index, retrieved_item in enumerate(retrieved[:k]):
-        if any(is_match(retrieved_item, gold_item) for gold_item in gold):
-            # 位置越靠后，折损越大：log2(index + 2)
-            dcg += 1.0 / math.log2(index + 2)
+    for retrieved_item in retrieved[:k]:
+        matched_index = None
+
+        # 找一条还没被命中过的 gold
+        for gold_index, gold_item in enumerate(gold):
+            if gold_index not in used_gold and is_match(retrieved_item, gold_item):
+                matched_index = gold_index
+                break
+
+        if matched_index is None:
+            relevance_flags.append(0.0)
+        else:
+            used_gold.add(matched_index)
+            relevance_flags.append(1.0)
+
+    dcg = sum(
+        relevance / math.log2(index + 2)
+        for index, relevance in enumerate(relevance_flags)
+    )
 
     # 理想情况下，前 min(len(gold), k) 个位置全是命中的 DCG
     ideal_hits = min(len(gold), k)

@@ -142,8 +142,9 @@ def _case_row(row: dict) -> str:
         <tr class="bad">
           <td>{_escape(row.get("id"))}</td>
           <td>{_escape(row.get("type"))}</td>
+          <td>{_escape(status)}</td>
           <td>{_escape(row.get("question"))}</td>
-          <td colspan="4">{_escape(status)}：{_escape(row.get("reason"))}</td>
+          <td colspan="4">{_escape(row.get("reason"))}</td>
         </tr>
         """
 
@@ -181,6 +182,7 @@ def _case_row(row: dict) -> str:
     <tr class="{row_class}">
       <td>{_escape(row.get("id"))}</td>
       <td>{_escape(row.get("type"))}</td>
+      <td>{_escape(row.get("outcome"))}</td>
       <td>{_escape(row.get("question"))}</td>
       <td>{_percent(recall5)}</td>
       <td>{_percent(mrr_value)}</td>
@@ -206,6 +208,7 @@ def build_report(results_path: Path, summary_path: Path, output_dir: Path) -> Pa
     summary = _read_json(summary_path)
     overall = summary.get("overall", {})
     by_type = summary.get("by_type", {})
+    outcomes = summary.get("outcomes", {})
 
     # 分题型图表数据
     recall_by_type = {
@@ -223,6 +226,8 @@ def build_report(results_path: Path, summary_path: Path, output_dir: Path) -> Pa
         _metric_card("已评估", summary.get("evaluated", 0)),
         _metric_card("跳过（缺文档）", summary.get("skipped", 0)),
         _metric_card("执行失败", summary.get("errors", 0)),
+        _metric_card("待选词短路", outcomes.get("clarification", 0)),
+        _metric_card("无结果", outcomes.get("no_result", 0)),
         _metric_card("Recall@5", _percent(overall.get("recall@5"))),
         _metric_card("Recall@10", _percent(overall.get("recall@10"))),
         _metric_card("MRR", _percent(overall.get("mrr"))),
@@ -328,6 +333,7 @@ def build_report(results_path: Path, summary_path: Path, output_dir: Path) -> Pa
         <tr>
           <th>ID</th>
           <th>类型</th>
+          <th>路径</th>
           <th>问题</th>
           <th>Recall@5</th>
           <th>MRR</th>
