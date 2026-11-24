@@ -77,6 +77,10 @@ class NodeItemNameConfirm(NodeBase):
         res_data = json.loads(res_json)
 
         item_names = res_data.get("item_names",[])
+        # 旅游领域类别：景点/交通/美食/住宿/线路/综合；空字符串表示不明确
+        query_category = str(res_data.get("category") or "").strip()
+        if query_category not in {"景点", "交通", "美食", "住宿", "线路", "综合"}:
+            query_category = ""
         rewritten_query =res_data.get("rewritten_query","")
 
         #todo
@@ -124,7 +128,7 @@ class NodeItemNameConfirm(NodeBase):
                 res = hybrid_search(
                     reqs=reqs,
                     collection_name=MilvusConfig.item_name_collection,
-                    output_fields=["item_name", "file_title"],        #  todo
+                    output_fields=["item_name", "file_title", "labels"],
                     limit=10,
                     ranker=(0.7, 0.3)
                 )
@@ -207,6 +211,8 @@ class NodeItemNameConfirm(NodeBase):
             "original_query": original_query,
             "answer": answer,
             "item_names": final_item_names,
+            # 查询类别只作为软加权信号，不单独做硬过滤
+            "query_category": query_category,
             "rewritten_query": rewritten_query,
             "history": get_recent_messages(session_id),
             "session_id": session_id,
@@ -245,7 +251,7 @@ class NodeItemNameConfirm(NodeBase):
             return client.query(
                 collection_name=collection,
                 filter=filter_expr,
-                output_fields=["item_name", "file_title", "metadata"],
+                output_fields=["item_name", "file_title", "labels"],
                 limit=10,
             )
 

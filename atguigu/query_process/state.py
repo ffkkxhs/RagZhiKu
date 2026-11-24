@@ -22,6 +22,7 @@ class QueryGraphState(TypedDict):
     # 排序过程中的数据
     rrf_chunks: list  # RRF 融合排序后的切片
     reranked_docs: list  # 重排序后的最终 Top-K 文档
+    expanded_docs: list  # 父块扩展后的文档（答案节点优先使用）
 
     # 生成过程中的数据
     prompt: str  # 组装好的 Prompt
@@ -29,6 +30,7 @@ class QueryGraphState(TypedDict):
 
     # 辅助信息
     item_names: List[str]  # 提取出的主体名称
+    query_category: str  # 旅游类别：景点/交通/美食/住宿/线路/综合
     rewritten_query: str  # 改写后的问题
     history: list  # 历史对话记录
 

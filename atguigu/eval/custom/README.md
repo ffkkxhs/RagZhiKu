@@ -10,57 +10,73 @@
 
 ---
 
-## 一、先理解四个指标
+## 一、五大指标 + 辅助指标
 
-### Recall@k（召回率）
+报告优先展示 RAG 里最常说的五个指标：
 
-标准答案里一共有 3 个“应该被找到”的片段，系统返回的前 k 条里找到了 2 个：
+### 1. Context Recall@10（上下文召回）
+
+标准答案里有多少份文档/章节，被前 10 条召回结果覆盖了。
 
 ```
-Recall@k = 2 / 3 ≈ 0.67
+Context Recall@10 = 被覆盖的 gold 数 / gold 总数
 ```
 
-它回答的是：**该找到的，有没有漏？**
+它回答的是：**回答问题需要的信息，找全了没有。**
 
-- `Recall@5`：只看前 5 条
-- `Recall@10`：只看前 10 条
-- 1.0 表示全找到，0 表示一个都没找到
+### 2. Context Precision@10（上下文精确）
 
-### MRR（Mean Reciprocal Rank）
+召回结果里，相关片段是不是排在前面。
 
-第一个正确结果排第几：
+计算方式（RAGAS 口径）：
 
-- 排第 1 -> 1 分
-- 排第 2 -> 1/2 分
-- 排第 5 -> 1/5 分
-- 没找到 -> 0 分
+- 对每个“相关”的位置 i，算前 i 条里的精确率（相关数 / i）；
+- 再把这些精确率求平均。
 
-它回答的是：**第一个正确答案出现得早不早。**
+它回答的是：**找回来的东西，靠不靠谱、排得靠不靠前。**
 
-### nDCG@k
+### 3. Faithfulness（忠实度）
 
-和 MRR 类似，但它会考虑**多个**正确结果的整体排序：
+答案里的事实能不能在检索资料里找到依据，有没有编造。1~5 分。
 
-- 命中的位置越靠前，贡献越大；
-- 最后除以“理想排序的得分”，压到 0~1。
+### 4. Answer Relevancy（答案相关性）
 
-只有一个标准答案时，nDCG 和 MRR 很接近；有多个标准答案时，nDCG 更能反映整体排序质量。
+答案有没有答非所问。1~5 分。
 
-### Faithfulness / Relevance / Citation
+### 5. Answer Correctness（答案正确性）
 
-这三个是 judge 给“答案”打的分，不是检索指标：
+答案和 `reference_answer` / `gold_facts` 的一致程度。1~5 分。
 
-- **Faithfulness（忠实度）**：答案里的事实能不能在检索资料里找到依据，有没有编造；
-- **Relevance（相关性）**：有没有答非所问；
-- **Citation（引用）**：答案里的来源/章节和资料对不对得上。
+- 没填 `reference_answer` 或 `gold_facts` 时，这一项显示 `-`；
+- 这是正常的，不是算错了。
 
-每项 1~5 分。judge 的评分理由会写进报告，方便你抽检。
+### 辅助检索指标
+
+除了五大指标，报告里还保留：
+
+- `Recall@5` / `Recall@10`
+- `MRR`
+- `nDCG@10`
+- `item_name_hit`（主体名是否命中）
+- `refusal_correct`（拒绝回答是否正确）
+- `Citation`（引用是否准确）
+
+这些是检索排序和工程质量的辅助信息，不和五大指标混在一起。
+
+### 什么时候能看到哪些指标
+
+| 模式 | Context Recall/Precision | Faithfulness / Answer Relevancy / Answer Correctness |
+|---|---|---|
+| `--mode retrieval` | 有 | 没有（不生成答案，显示 `-`） |
+| `--mode full` | 有 | 有（会调用 judge，产生 LLM 成本） |
+
+所以想看全五个指标，必须跑 `--mode full`。
 
 ---
 
 ## 二、测试集长什么样
 
-`dataset/travel_eval.jsonl` 每行一个 case：
+`atguigu/eval/dataset/travel_eval.jsonl` 每行一个 case：
 
 ```json
 {
@@ -71,6 +87,7 @@ Recall@k = 2 / 3 ≈ 0.67
   "gold_docs": [
     {"file_title": "成都交通指南"}
   ],
+  "reference_answer": "成都双流机场到市区可乘地铁10号线、机场大巴或出租车/网约车……",
   "gold_facts": [],
   "expect_refusal": false
 }
@@ -83,13 +100,14 @@ Recall@k = 2 / 3 ≈ 0.67
 | `id` | 唯一标识，方便定位 bad case |
 | `type` | 题型，报告会按题型分组 |
 | `question` | 用户问题 |
+| `reference_answer` | 参考答案，用于 Answer Correctness；没填时该项显示 `-` |
 | `gold_item_names` | 应该识别出的主体名（旅游场景就是城市） |
 | `gold_docs` | 应该命中的文档/章节 |
 | `gold_facts` | 答案里必须出现的关键事实，给 judge 参考；可以先留空 |
 | `expect_refusal` | 是否应该拒答（库外问题） |
 
 当前测试集是**文档级标注**：只写 `file_title`，同一文件的任意章节都算命中。
-等你把切分改造成带 `title_path` 后，可以这样升级成**章节级**：
+切分节点现在已经产出 `title_path`，后续可以在 `gold_docs` 里补 `title_path`，升级成**章节级**评估：
 
 ```json
 "gold_docs": [
@@ -106,37 +124,39 @@ Recall@k = 2 / 3 ≈ 0.67
 ### 只测检索（推荐先跑这个）
 
 ```bash
-python -m atguigu.eval.run_eval --mode retrieval
+python -m atguigu.eval.custom.run_eval --mode retrieval
 ```
 
 特点：
 
 - 不调用答案生成模型，速度快、成本低；
 - 默认关闭 Web 搜索，避免外部噪音；
-- 只看 Recall / MRR / nDCG / 主体名命中。
+- 能看 Context Recall / Context Precision / Recall / MRR / nDCG / 主体名命中；
+- Faithfulness / Answer Relevancy / Answer Correctness 显示 `-`，因为没生成答案。
 
 ### 端到端（检索 + 生成 + judge）
 
 ```bash
-python -m atguigu.eval.run_eval --mode full
+python -m atguigu.eval.custom.run_eval --mode full
 ```
 
 特点：
 
 - 会生成最终答案；
-- 会调用 LLM judge 打 faithfulness / relevance / citation；
+- 会调用 LLM judge 打 Faithfulness / Answer Relevancy / Answer Correctness / Citation；
+- 只有填了 `reference_answer` 或 `gold_facts`，Answer Correctness 才有分数；
 - token 成本和耗时更高。
 
 ### 只跑前 5 条
 
 ```bash
-python -m atguigu.eval.run_eval --mode retrieval --limit 5
+python -m atguigu.eval.custom.run_eval --mode retrieval --limit 5
 ```
 
 ### 需要把 Web 搜索也纳入评估
 
 ```bash
-python -m atguigu.eval.run_eval --mode full --enable-web
+python -m atguigu.eval.custom.run_eval --mode full --enable-web
 ```
 
 默认关闭 Web，是因为网页结果噪音大，会干扰“检索改造是否有效”的判断。
@@ -145,7 +165,7 @@ python -m atguigu.eval.run_eval --mode full --enable-web
 
 ## 四、输出在哪里
 
-每次运行会在 `atguigu/eval/results/<时间>_<模式>/` 下生成：
+每次运行会在 `atguigu/eval/custom/results/<时间>_<模式>/` 下生成：
 
 | 文件 | 内容 |
 |---|---|
@@ -155,10 +175,11 @@ python -m atguigu.eval.run_eval --mode full --enable-web
 
 报告里有：
 
-- 指标卡片：总 case 数、已评估、跳过、Recall@5、MRR、Faithfulness；
-- 分题型条形图；
-- 逐条明细：标准答案、实际召回、识别出的主体名、最终回答、judge 理由；
-- Recall@5 为 0 或 faithfulness 低于 3 的 case 会标红。
+- 指标卡片：Context Recall、Context Precision、Faithfulness、Answer Relevancy、Answer Correctness；
+- 辅助卡片：总 case 数、已评估、跳过、待选词短路、无结果、Recall@5、MRR；
+- 分题型条形图：五大指标各一张；
+- 逐条明细：标准答案、实际召回、识别出的主体名、辅助指标、最终回答、judge 理由；
+- Context Recall 为 0、faithfulness 低于 3 或 answer correctness 低于 3 的 case 会标红。
 
 ---
 

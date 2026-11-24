@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>RAG 评估报告</title>
+  <style>
+    body {
+      font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { margin: 0 0 8px; }
+    h2 { margin-top: 28px; }
+    h3 { margin: 18px 0 10px; font-size: 15px; }
+    .meta { color: #6b7280; font-size: 13px; margin-bottom: 20px; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .card-label { font-size: 12px; color: #6b7280; }
+    .card-value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+    .panel {
+      background: #fff;
+      border-radius: 10px;
+      padding: 18px;
+      margin-top: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+    .bar-label { width: 120px; font-size: 13px; color: #374151; }
+    .bar-track {
+      flex: 1;
+      height: 14px;
+      background: #e5e7eb;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-radius: 7px;
+    }
+    .bar-value { width: 48px; text-align: right; font-size: 12px; color: #374151; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+    th { text-align: left; background: #f9fafb; font-weight: 600; }
+    tr.bad td { background: #fff7f7; }
+    details summary { cursor: pointer; color: #2563eb; }
+    .detail-block { margin-top: 10px; line-height: 1.6; }
+    .detail-block pre {
+      white-space: pre-wrap;
+      background: #f9fafb;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .muted { color: #9ca3af; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>RAG 评估报告</h1>
+  <div class="meta">
+    生成时间：2026-11-21 14:56:04 ·
+    模式：full ·
+    测试集：E:\sgg\projects\RagZhiKu\atguigu\eval\dataset\travel_eval.jsonl
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-label">总 case 数</div>
+      <div class="card-value">20</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-label">已评估</div>
+      <div class="card-value">20</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-label">跳过（缺文档）</div>
+      <div class="card-value">0</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-label">执行失败</div>
+      <div class="card-value">0</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-label">Recall@5</div>
+      <div class="card-value">40.0%</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-label">Recall@10</div>
+      <div class="card-value">40.0%</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-label">MRR</div>
+      <div class="card-value">40.0%</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-label">Faithfulness</div>
+      <div class="card-value">3.1</div>
+    </div>
+    </div>
+
+  <div class="panel">
+    <h2>分题型表现</h2>
+    <h3>分题型 Recall@5</h3>
+        <div class="bar-row">
+          <div class="bar-label">transport</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:0.0%"></div>
+          </div>
+          <div class="bar-value">0.0</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">attraction</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:66.7%"></div>
+          </div>
+          <div class="bar-value">0.7</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">itinerary</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:0.0%"></div>
+          </div>
+          <div class="bar-value">0.0</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">food</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:66.7%"></div>
+          </div>
+          <div class="bar-value">0.7</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">hotel</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:100.0%"></div>
+          </div>
+          <div class="bar-value">1.0</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">comparison</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:0.0%"></div>
+          </div>
+          <div class="bar-value">0.0</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">out_of_kb</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:0.0%"></div>
+          </div>
+          <div class="bar-value">0.0</div>
+        </div>
+        <h3>分题型 Faithfulness（1~5）</h3>
+        <div class="bar-row">
+          <div class="bar-label">transport</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:20.0%"></div>
+          </div>
+          <div class="bar-value">1.0</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">attraction</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:73.3%"></div>
+          </div>
+          <div class="bar-value">3.7</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">itinerary</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:20.0%"></div>
+          </div>
+          <div class="bar-value">1.0</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">food</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:73.3%"></div>
+          </div>
+          <div class="bar-value">3.7</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">hotel</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:100.0%"></div>
+          </div>
+          <div class="bar-value">5.0</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">comparison</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:80.0%"></div>
+          </div>
+          <div class="bar-value">4.0</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">out_of_kb</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:100.0%"></div>
+          </div>
+          <div class="bar-value">5.0</div>
+        </div>
+        
+  </div>
+
+  <div class="panel">
+    <h2>逐条结果</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>类型</th>
+          <th>问题</th>
+          <th>Recall@5</th>
+          <th>MRR</th>
+          <th>Faithfulness</th>
+          <th>明细</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+    <tr class="bad">
+      <td>cd_transport_001</td>
+      <td>transport</td>
+      <td>成都双流机场到市区怎么走</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>1.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>成都交通指南 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <span class='muted'>（空）</span>
+        <b>识别出的主体名</b>
+        <p></p>
+        <b>最终回答</b>
+        <pre>待选词(0.6-0.8)：成都 成都美食 成都3日经典游 杭州</pre>
+        <b>judge 理由</b>
+        <p>回答内容与问题无关，且无任何检索资料支持，明显编造</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="">
+      <td>cd_attraction_001</td>
+      <td>attraction</td>
+      <td>成都有哪些必去景点</td>
+      <td>100.0%</td>
+      <td>100.0%</td>
+      <td>5.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>成都景点推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>成都景点推荐 / ### 第一层核心景点</li><li>成都景点推荐 / ### 第一优先级</li><li>成都景点推荐 / ## 目的地概览</li><li>成都景点推荐 / ### 第二层核心片区</li><li>成都景点推荐 / ### 成都最适合先玩哪一类景点</li><li>成都景点推荐 / ### 第一次到成都的游客</li><li>成都景点推荐 / ## 元数据</li></ul>
+        <b>识别出的主体名</b>
+        <p>成都</p>
+        <b>最终回答</b>
+        <pre>成都有以下几类必去景点，建议根据游览顺序和兴趣优先安排：
+
+1. **熊猫基地**：作为成都最具代表性的单点景点，大熊猫繁育研究基地是第一次来成都的游客首选，可以近距离观察国宝大熊猫的生活。
+
+2. **春熙路 &amp; 太古里**：成都的城市核心片区，集购物、餐饮、潮流文化于一体，是感受现代成都都市生活节奏的最佳地点。
+
+3. **宽窄巷子 &amp; 人民公园**：属于第二层高频片区，分别代表老城的历史风貌与本地人日常休闲文化。宽窄巷子适合拍照打卡，人民公园则可体验成都慢生活，如喝茶、下棋等。
+
+4. **武侯祠 &amp; 锦里**：历史文化片区，武侯祠是纪念诸葛亮的祠庙，锦里则是仿古商业街，融合三国文化与川西民俗，适合对历史感兴趣的游客。
+
+这些景点共同构成了成都的核心体验区，建议首次到访者优先安排熊猫基地与城市中心片区，再根据个人喜好补充老城与休闲内容。
+
+【图片】
+&lt;https://example.com/panda_base.jpg&gt;
+&lt;https://example.com/chunxi_lu_tai_gu_li.jpg&gt;
+&lt;https://example.com/kuan_zhai_xiang_zi.jpg&gt;
+&lt;https://example.com/wu_hou_ci_jin_li.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>无</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="bad">
+      <td>cd_itinerary_001</td>
+      <td>itinerary</td>
+      <td>成都周边两日游怎么安排</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>1.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>成都线路推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <span class='muted'>（空）</span>
+        <b>识别出的主体名</b>
+        <p></p>
+        <b>最终回答</b>
+        <pre>待选词(0.6-0.8)：成都3日经典游 成都 成都美食 厦门鼓浪屿2至3日游 杭州乌镇3日游 三亚5日经典游 张家界3日深度游 昆大丽6日经典游</pre>
+        <b>judge 理由</b>
+        <p>回答完全未提供有效信息，仅列出无关旅游线路，无事实依据且与问题无关</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="">
+      <td>cd_food_001</td>
+      <td>food</td>
+      <td>成都有什么必吃的美食</td>
+      <td>100.0%</td>
+      <td>100.0%</td>
+      <td>5.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>成都美食推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>成都美食推荐 / ### 川味小吃</li><li>成都美食推荐 / ### 第一层核心美食</li><li>成都美食推荐 / ### 第一优先级</li><li>成都美食推荐 / ### 第二优先级</li><li>成都美食推荐 / ### 火锅</li><li>成都美食推荐 / ## 目的地概览</li><li>成都美食推荐 / ### 甜品和冰品很重要</li><li>成都美食推荐 / ### 第一次去成都的游客</li></ul>
+        <b>识别出的主体名</b>
+        <p>成都美食</p>
+        <b>最终回答</b>
+        <pre>成都有许多必吃的美食，主要包括以下几类：
+
+1. **火锅**：成都最核心的名片之一，适合多人共享，是游客体验成都美食的首选。
+2. **串串香**：与火锅并列，是成都最具代表性的街头美食之一。
+3. **担担面**：经典川味小吃，麻辣鲜香，深受游客喜爱。
+4. **钟水饺**：成都传统名吃，以皮薄馅嫩、蘸料独特著称。
+5. **龙抄手**：成都著名小吃，汤头鲜美，抄手滑嫩。
+6. **赖汤圆**：甜而不腻，软糯香甜，是成都传统甜品代表。
+7. **甜水面**：口感浓郁，带有芝麻酱和红糖风味，是成都特色甜食。
+8. **冰粉**：清凉解辣，是夏季消暑必备，常见于街头小摊。
+9. **冒菜**：类似火锅的小吃形式，食材丰富，口味多样。
+10. **社区小吃**：涵盖各种本地化、接地气的小吃，体现成都“生活即美食”的文化。
+
+此外，成都的美食体验讲究节奏：白天可品尝小吃，晚上享用火锅或串串，再搭配茶馆饮茶或甜品收尾，形成完整的城市饮食节奏。
+
+【图片】
+&lt;https://example.com/chengdu_hotpot.jpg&gt;
+&lt;https://example.com/dan dan mian.jpg&gt;
+&lt;https://example.com/long chao shou.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>无</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="">
+      <td>cd_hotel_001</td>
+      <td>hotel</td>
+      <td>成都住哪个区域比较方便</td>
+      <td>100.0%</td>
+      <td>100.0%</td>
+      <td>5.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>成都住宿推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>成都住宿推荐 / ### 游玩联动</li><li>成都景点推荐 / ### 城市核心区适合作为行程支点</li><li>成都住宿推荐 / ### 春熙路和太古里</li><li>成都住宿推荐 / ### 用餐和夜间活动</li><li>成都住宿推荐 / ### 想把住宿和逛街结合起来的人</li><li>成都交通指南 / ### 第一次去成都的游客</li><li>成都住宿推荐 / ### 商务和转场游客</li><li>成都住宿推荐 / ### 第一层核心区域</li></ul>
+        <b>识别出的主体名</b>
+        <p>成都</p>
+        <b>最终回答</b>
+        <pre>在成都，如果追求交通便利、购物餐饮丰富以及夜间活动方便，建议住在春熙路或太古里附近。这两个区域位于城市核心区，是第一次到成都的游客最推荐的住宿选择，能够轻松连接主要景点、地铁线路和商业配套。
+
+如果你更注重转场或商务出行，南站、金融城及地铁便利区域也是不错的选择。
+
+此外，若偏好安静、有老成都生活气息，宽窄巷子或人民公园周边也较为舒适。
+
+【图片】
+&lt;https://example.com/image/chunxi-lu.jpg&gt;
+&lt;https://example.com/image/tai-gu-li.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>无</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="bad">
+      <td>sy_transport_001</td>
+      <td>transport</td>
+      <td>三亚凤凰机场到亚龙湾怎么走</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>1.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>三亚交通指南 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <span class='muted'>（空）</span>
+        <b>识别出的主体名</b>
+        <p></p>
+        <b>最终回答</b>
+        <pre>待选词(0.6-0.8)：三亚 三亚美食 三亚5日经典游 成都 杭州</pre>
+        <b>judge 理由</b>
+        <p>回答内容与问题无关，未提供任何关于三亚凤凰机场到亚龙湾交通方式的信息，且引用的词汇无依据</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="">
+      <td>sy_attraction_001</td>
+      <td>attraction</td>
+      <td>三亚有哪些必去景点</td>
+      <td>100.0%</td>
+      <td>100.0%</td>
+      <td>5.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>三亚景点推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>三亚景点推荐 / ### 第一层核心景点</li><li>三亚景点推荐 / ### 第一优先级</li><li>三亚景点推荐 / ## 目的地概览</li><li>三亚景点推荐 / ### 第二优先级</li><li>三亚景点推荐 / ### 第一次到三亚的游客</li><li>三亚景点推荐 / ### 3 天景点安排</li><li>三亚景点推荐 / ### 东线和西线最好分天安排</li><li>三亚景点推荐 / ### 2 到 3 天</li><li>三亚景点推荐 / ### 第一次去三亚优先选海湾还是选传统景点</li></ul>
+        <b>识别出的主体名</b>
+        <p>三亚</p>
+        <b>最终回答</b>
+        <pre>三亚的必去景点主要包括以下几个核心目的地：
+
+1. **亚龙湾**：作为三亚最著名的海湾之一，亚龙湾以其优质的海水、细腻的沙滩和高端度假酒店著称，是体验热带滨海度假的理想选择。
+
+2. **蜈支洲岛**：位于三亚东部海域，是离岛旅游的代表，适合进行潜水、浮潜、海上摩托等水上活动，也是热门的海岛度假地。
+
+3. **天涯海角**：三亚的传统地标景区，以“天涯”、“海角”石刻闻名，是游客必打卡的经典景点，具有浓厚的文化和浪漫寓意。
+
+4. **南山文化旅游区**：集佛教文化、自然风光于一体的大型文化景区，内有108米高的南山海上观音像，适合喜欢文化和宗教氛围的游客。
+
+此外，根据旅行偏好和行程安排，还可考虑以下景点：
+- **海棠湾**：东线重要组成部分，以高端度假酒店、购物和海滨休闲为主，适合追求奢华度假体验的游客。
+- **鹿回头**：位于三亚市区附近，可俯瞰城市与海景，是观赏日落和城市夜景的好去处。
+
+建议根据行程天数合理规划路线：若时间有限，优先选择东线（如亚龙湾+蜈支洲岛）或西线（如天涯海角+南山）中的一条主线，避免同一天跨东西线奔波，以提升旅行舒适度。
+
+【图片】
+&lt;https://example.com/ylwan.jpg&gt;
+&lt;https://example.com/wuzhizhou.jpg&gt;
+&lt;https://example.com/tianyahaijiao.jpg&gt;
+&lt;https://example.com/nanshan.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>无</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="bad">
+      <td>sy_itinerary_001</td>
+      <td>itinerary</td>
+      <td>三亚四天三晚怎么安排</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>1.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>三亚线路推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <span class='muted'>（空）</span>
+        <b>识别出的主体名</b>
+        <p></p>
+        <b>最终回答</b>
+        <pre>待选词(0.6-0.8)：三亚5日经典游 三亚 三亚美食</pre>
+        <b>judge 理由</b>
+        <p>回答未提供任何有效行程安排，仅列出无关关键词，完全无依据且与问题无关</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="bad">
+      <td>sy_food_001</td>
+      <td>food</td>
+      <td>三亚有什么特色美食</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>1.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>三亚美食推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>三亚住宿推荐 / ### 用餐和夜生活</li></ul>
+        <b>识别出的主体名</b>
+        <p>三亚</p>
+        <b>最终回答</b>
+        <pre>三亚作为海南的重要旅游城市，拥有丰富的热带海岛美食文化。虽然参考内容中未直接提及具体特色美食，但结合三亚的地域特点和海南饮食文化，其特色美食通常包括：
+
+- **文昌鸡**：海南四大名菜之首，以肉质鲜嫩、皮脆汁多著称。
+- **东山羊**：产自三亚周边的东山岭，肉质细嫩，味道鲜美。
+- **和乐蟹**：产自万宁和三亚一带，膏肥黄满，是海南著名的海鲜之一。
+- **清补凉**：一种经典的海南甜品，由多种豆类、水果、椰奶等制成，清凉解暑。
+- **海南粉**：用米粉搭配卤汁、配菜（如酸笋、花生、虾米等）而成，风味独特。
+- **加积鸭**：琼海特产，但三亚也常见，肉质紧实，味道浓郁。
+
+这些美食大多可在三亚市区、三亚湾、大东海等地的餐馆或夜市中品尝到。
+
+【图片】
+&lt;https://example.com/images/haikou_wenchang_chicken.jpg&gt;
+&lt;https://example.com/images/hainan_fen.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>模型回答中列举的文昌鸡、东山羊、和乐蟹等美食均未在检索资料中提及，属于编造内容；检索资料仅讨论餐饮区域分布，未涉及具体菜品。</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="">
+      <td>sy_hotel_001</td>
+      <td>hotel</td>
+      <td>三亚住哪里比较方便</td>
+      <td>100.0%</td>
+      <td>100.0%</td>
+      <td>5.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>三亚住宿推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>三亚住宿推荐 / ### 三亚湾</li><li>三亚交通指南 / ### 去免税城</li><li>三亚住宿推荐 / ### 用餐和夜生活</li><li>三亚住宿推荐 / ## 目的地概览</li><li>三亚住宿推荐 / ### 第一层核心区域</li><li>三亚交通指南 / ### 三亚湾</li><li>三亚住宿推荐 / ### 市区和机场周边</li><li>三亚交通指南 / ### 去亚龙湾热带天堂森林公园</li><li>三亚住宿推荐 / ### 海棠湾</li></ul>
+        <b>识别出的主体名</b>
+        <p>三亚</p>
+        <b>最终回答</b>
+        <pre>在三亚，选择住宿地点主要取决于你的行程重点和需求。以下是根据不同需求推荐的区域：
+
+- **如果注重交通便利、接机/送机方便，或行程较短（如中转、早晚航班）**：  
+  推荐住在**三亚湾**。这里离凤凰国际机场较近，生活配套成熟，餐饮选择多，适合抵达日、返程日或短暂停留。
+
+- **如果追求高品质的度假体验，想把时间花在海边、酒店设施和亲子/情侣活动上**：  
+  推荐住在**亚龙湾**。这里海景优美，酒店成熟，适合长时间度假，尤其适合家庭出游或情侣旅行。
+
+- **如果计划购物（尤其是免税店）、前往蜈支洲岛或东线景点，且希望环境安静、酒店高端**：  
+  推荐住在**海棠湾**。这里是三亚国际免税城所在地，交通便利，酒店多为高端品牌，适合对购物和静谧度假有要求的人。
+
+- **如果更看重夜晚的用餐选择和城市生活便利性**：  
+  **三亚湾、大东海和市区核心区**更为合适，这些地方夜生活丰富，出门方便。
+
+总结：  
+- 短途停留、中转、赶早班机 → 选**三亚湾**或**市区/机场周边**。  
+- 主要度假、享受海景与酒店服务 → 选**亚龙湾**。  
+- 免税购物、东线行程、高端安静度假 → 选**海棠湾**。
+
+【图片】
+&lt;https://example.com/images/sanya_bay.jpg&gt;
+&lt;https://example.com/images/haitang_bay.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>无</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="bad">
+      <td>xm_attraction_001</td>
+      <td>attraction</td>
+      <td>厦门必去景点有哪些</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>1.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>厦门景点推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <span class='muted'>（空）</span>
+        <b>识别出的主体名</b>
+        <p></p>
+        <b>最终回答</b>
+        <pre>待选词(0.6-0.8)：厦门 厦门美食 厦门鼓浪屿2至3日游</pre>
+        <b>judge 理由</b>
+        <p>未提供检索资料，模型回答内容无依据且与问题无关，仅为关键词堆砌</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="bad">
+      <td>xm_transport_001</td>
+      <td>transport</td>
+      <td>厦门北站到鼓浪屿怎么走</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>1.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>厦门交通指南 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <span class='muted'>（空）</span>
+        <b>识别出的主体名</b>
+        <p></p>
+        <b>最终回答</b>
+        <pre>待选词(0.6-0.8)：厦门 厦门美食 厦门鼓浪屿2至3日游 杭州 成都</pre>
+        <b>judge 理由</b>
+        <p>回答内容与问题无关，且无任何检索资料支持，存在严重编造和跑题</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="bad">
+      <td>hz_attraction_001</td>
+      <td>attraction</td>
+      <td>杭州西湖怎么玩</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>1.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>杭州景点推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <span class='muted'>（空）</span>
+        <b>识别出的主体名</b>
+        <p></p>
+        <b>最终回答</b>
+        <pre>待选词(0.6-0.8)：杭州 杭州美食 杭州乌镇3日游 厦门 成都</pre>
+        <b>judge 理由</b>
+        <p>回答完全未基于任何检索资料，内容与问题无关，且包含无关城市和旅游线路，存在严重编造。</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="">
+      <td>hz_food_001</td>
+      <td>food</td>
+      <td>杭州有什么本地美食</td>
+      <td>100.0%</td>
+      <td>100.0%</td>
+      <td>5.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>杭州美食推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>杭州美食推荐 / ### 第一层核心美食</li><li>杭州美食推荐 / ### 杭帮菜代表</li><li>杭州美食推荐 / ### 第一优先级</li><li>杭州美食推荐 / ### 经典小吃</li><li>杭州美食推荐 / ### 第二优先级</li><li>杭州美食推荐 / ## 目的地概览</li><li>杭州美食推荐 / ### 第二层核心场景</li><li>杭州美食推荐 / ### 第一次去杭州的游客</li><li>杭州美食推荐 / ### 先吃杭帮菜，再补小吃</li></ul>
+        <b>识别出的主体名</b>
+        <p>杭州美食</p>
+        <b>最终回答</b>
+        <pre>杭州的本地美食以杭帮菜为代表，最具代表性的是东坡肉、西湖醋鱼和龙井虾仁，这三道菜体现了杭州饮食清雅、讲究火候与平衡的特点。此外，片儿川、葱包桧和定胜糕也是杭州的经典小吃，适合在逛街或作为轻食补充，让美食体验更接地气。
+
+这些美食主要分布在西湖周边、河坊街和南宋御街、老牌杭帮菜馆以及龙井村和茶区周边等场景中。对初次到访的游客而言，建议优先体验杭帮菜，再品尝街区小吃和茶点，以获得完整的杭州美食感受。
+
+【图片】
+&lt;https://example.com/hangzhou-dishes.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>无</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="">
+      <td>zjj_attraction_001</td>
+      <td>attraction</td>
+      <td>张家界必去景点有哪些</td>
+      <td>100.0%</td>
+      <td>100.0%</td>
+      <td>5.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>张家界景点推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>张家界景点推荐 / ### 第一优先级</li><li>张家界景点推荐 / ### 第一层核心景点</li><li>张家界景点推荐 / ## 目的地概览</li><li>张家界景点推荐 / ## 元数据</li><li>张家界景点推荐 / ### 张家界哪些景点更适合第一次优先安排</li><li>张家界景点推荐 / ### 张家界国家森林公园</li><li>张家界景点推荐 / ### 第一次去张家界的游客</li><li>张家界景点推荐 / ### 森林公园</li></ul>
+        <b>识别出的主体名</b>
+        <p>张家界, 张家界国家森林公园</p>
+        <b>最终回答</b>
+        <pre>张家界必去的景点主要包括两大核心目的地：张家界国家森林公园和天门山。
+
+1. **张家界国家森林公园**  
+   作为张家界自然景观的核心代表，公园展现了典型的峰林地貌，适合安排一整天甚至更长时间游览。主要推荐区域包括袁家界、天子山和金鞭溪，这些片区提供了完整的峰林观景体验和丰富的自然景观。
+
+2. **天门山**  
+   位于市区近郊，以高差体验和山岳观景为主，是游客感受张家界立体地貌的重要组成部分。天门山索道、天门洞以及玻璃栈道等特色项目也极具吸引力。
+
+这两处景点共同构成了大多数游客的主线行程，且在交通组织、住宿安排和游玩节奏上各有不同，建议首次前往的游客优先围绕这两个主景点规划行程。
+
+【图片】
+&lt;https://example.com/zhangjiajie_national_forest_park.jpg&gt;
+&lt;https://example.com/tianmen_mountain.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>无</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="">
+      <td>yn_attraction_001</td>
+      <td>attraction</td>
+      <td>云南第一次去怎么玩</td>
+      <td>100.0%</td>
+      <td>100.0%</td>
+      <td>5.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>云南景点推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>云南景点推荐 / ### 第一优先级</li><li>云南景点推荐 / ### 第一层核心景点</li><li>云南景点推荐 / ### 云南哪些景点最适合第一次去</li><li>云南住宿推荐 / ### 第一次来云南的游客</li><li>云南景点推荐 / ## 目的地概览</li><li>云南交通指南 / ## 目的地概览</li><li>云南景点推荐 / ### 第一次去云南的游客</li><li>云南住宿推荐 / ### 游玩联动</li><li>云南景点推荐 / ### 6 天以上景点安排</li><li>云南景点推荐 / ### 云南是不是一定要全省跑</li></ul>
+        <b>识别出的主体名</b>
+        <p>云南</p>
+        <b>最终回答</b>
+        <pre>第一次去云南，建议采用多城市串联的行程模式，以获得完整的云南体验。核心推荐目的地包括大理古城、洱海、丽江古城和玉龙雪山，这四个地点构成了云南最经典的初访组合。
+
+具体建议如下：
+- **昆明**：作为进入云南的门户，适合短暂停留，衔接交通，可安排1天时间。
+- **大理**：重点体验古城慢生活与洱海环湖风光，建议停留2天，可骑行环洱海、游览双廊等。
+- **丽江**：以丽江古城为核心，结合束河古镇和玉龙雪山一日游，建议停留2天，感受纳西文化与高原自然景观。
+
+整体行程推荐5至7天，不必追求覆盖全省。重点在于理解不同城市承担的体验角色：大理偏湖景与慢节奏生活，丽江偏古城氛围与雪山强体验，昆明则主要作为交通枢纽。
+
+若时间充裕（6天以上），可适当增加在大理或丽江的停留时间，让旅行更从容。
+
+【图片】
+&lt;https://example.com/dali古城.jpg&gt;
+&lt;https://example.com/洱海环湖.jpg&gt;
+&lt;https://example.com/丽江古城.jpg&gt;
+&lt;https://example.com/玉龙雪山.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>无</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="bad">
+      <td>yn_itinerary_001</td>
+      <td>itinerary</td>
+      <td>云南五日游线路怎么安排</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>1.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>云南线路推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <span class='muted'>（空）</span>
+        <b>识别出的主体名</b>
+        <p></p>
+        <b>最终回答</b>
+        <pre>待选词(0.6-0.8)：云南 三亚5日经典游 昆大丽6日经典游 云南美食 成都3日经典游 厦门鼓浪屿2至3日游 杭州乌镇3日游 张家界3日深度游</pre>
+        <b>judge 理由</b>
+        <p>回答内容与问题无关，未提供任何有效的云南五日游线路安排，且引用的旅游线路信息与检索资料完全不符，存在严重编造</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="bad">
+      <td>compare_001</td>
+      <td>comparison</td>
+      <td>三亚和厦门哪个更适合亲子游</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>5.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>三亚景点推荐 / </li><li>厦门景点推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>三亚住宿推荐 / ### 亲子和家庭游客</li></ul>
+        <b>识别出的主体名</b>
+        <p>三亚, 厦门</p>
+        <b>最终回答</b>
+        <pre>三亚更适合亲子游。根据参考内容，亲子家庭通常更适合选择亚龙湾或海棠湾，因为这些区域的度假属性更强，酒店配套更完整，能够为家庭游客提供更全面的服务和便利设施。
+
+【图片】
+&lt;https://example.com/yaolongwan.jpg&gt;
+&lt;https://example.com/haotangwan.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>无</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="bad">
+      <td>compare_002</td>
+      <td>comparison</td>
+      <td>成都和杭州哪个更适合美食游</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>3.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <ul><li>成都美食推荐 / </li><li>杭州美食推荐 / </li></ul>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>杭州住宿推荐 / ### 先看是城市游还是景观游</li></ul>
+        <b>识别出的主体名</b>
+        <p>成都, 杭州</p>
+        <b>最终回答</b>
+        <pre>成都和杭州都是美食之都，各有特色，适合不同类型的美食游体验。
+
+成都以川菜为代表，麻辣鲜香，风味浓郁，街头小吃丰富，如担担面、火锅、串串香、兔头等，美食氛围浓厚，适合喜欢重口味、追求烟火气的游客。成都的美食分布广泛，从宽窄巷子到锦里，再到各种夜市，几乎处处可觅美食。
+
+杭州则以杭帮菜见长，讲究清淡雅致、注重时令与食材本味，代表菜有东坡肉、西湖醋鱼、龙井虾仁等。杭州的美食更偏向于精致与文化融合，适合喜欢安静用餐、追求饮食美学的游客。此外，杭州的湖滨步行街、河坊街等地也汇聚了众多本地特色小吃和老字号。
+
+若偏好热闹、重口味、街头烟火气息，成都更适合；若偏爱清淡、精致、结合自然与人文的用餐体验，杭州更佳。
+
+【图片】
+&lt;https://example.com/chengdu_food.jpg&gt;
+&lt;https://example.com/hangzhou_food.jpg&gt;</pre>
+        <b>judge 理由</b>
+        <p>模型回答中关于成都美食的描述在检索资料中无依据，仅杭州部分提及湖滨或市中心，但未提及其他内容；引用来源缺失，图片非文本引用，无法对应检索资料</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+    <tr class="">
+      <td>oob_001</td>
+      <td>out_of_kb</td>
+      <td>成都明天天气怎么样</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>5.0</td>
+      <td>
+    <details>
+      <summary>查看明细</summary>
+      <div class="detail-block">
+        <b>标准答案（gold）</b>
+        <span class='muted'>（空）</span>
+        <b>实际召回（reranked_docs）</b>
+        <ul><li>成都交通指南 / ### 想看老城和慢生活的人</li></ul>
+        <b>识别出的主体名</b>
+        <p>成都</p>
+        <b>最终回答</b>
+        <pre>根据现有信息，无法提供成都明天的天气情况。建议您查阅权威气象网站或应用获取最新天气预报。</pre>
+        <b>judge 理由</b>
+        <p>无</p>
+      </div>
+    </details>
+    </td>
+    </tr>
+    
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

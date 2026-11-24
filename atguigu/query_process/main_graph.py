@@ -3,6 +3,7 @@ from langgraph.graph import StateGraph
 
 from atguigu.query_process.nodes.node_answer_output import NodeAnswerOutput
 from atguigu.query_process.nodes.node_item_name_confirm import NodeItemNameConfirm
+from atguigu.query_process.nodes.node_parent_expand import NodeParentExpand
 from atguigu.query_process.nodes.node_rerank import NodeRerank
 from atguigu.query_process.nodes.node_rrf import NodeRrf
 from atguigu.query_process.nodes.node_search_embedding import NodeSearchEmbedding
@@ -27,6 +28,7 @@ class QueryMainGraphRunner:
         self.builder.add_node(NodeWebSearchMcp.name, NodeWebSearchMcp())
         self.builder.add_node(NodeRrf.name, NodeRrf())
         self.builder.add_node(NodeRerank.name, NodeRerank())
+        self.builder.add_node(NodeParentExpand.name, NodeParentExpand())
         self.builder.add_node(NodeAnswerOutput.name, NodeAnswerOutput())
 
     def after_item_name_confirm_router(self, state: QueryGraphState):
@@ -43,7 +45,9 @@ class QueryMainGraphRunner:
         self.builder.add_edge(NodeSearchEmbedding.name, NodeRrf.name)
         self.builder.add_edge(NodeWebSearchMcp.name, NodeRrf.name)
         self.builder.add_edge(NodeRrf.name,NodeRerank.name)
-        self.builder.add_edge(NodeRerank.name,NodeAnswerOutput.name)
+        # rerank 之后回捞父块，再交给答案节点
+        self.builder.add_edge(NodeRerank.name,NodeParentExpand.name)
+        self.builder.add_edge(NodeParentExpand.name,NodeAnswerOutput.name)
         self.builder.add_edge(NodeAnswerOutput.name,END)
 
     def run(self,state):

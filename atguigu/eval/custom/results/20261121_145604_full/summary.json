@@ -1,0 +1,106 @@
+{
+  "generated_at": "2026-11-21 14:56:04",
+  "mode": "full",
+  "dataset": "E:\\sgg\\projects\\RagZhiKu\\atguigu\\eval\\dataset\\travel_eval.jsonl",
+  "total": 20,
+  "evaluated": 20,
+  "skipped": 0,
+  "errors": 0,
+  "overall": {
+    "recall@5": 0.4,
+    "recall@10": 0.4,
+    "mrr": 0.4,
+    "ndcg@10": 1.4706674340464034,
+    "item_name_hit": 0.45,
+    "refusal_correct": 0.95,
+    "judge_faithfulness": 3.1,
+    "judge_relevance": 3.4,
+    "judge_citation": 3.0
+  },
+  "by_type": {
+    "transport": {
+      "count": 3,
+      "recall@5": 0.0,
+      "recall@10": 0.0,
+      "mrr": 0.0,
+      "ndcg@10": 0.0,
+      "item_name_hit": 0.0,
+      "refusal_correct": 1.0,
+      "judge_faithfulness": 1.0,
+      "judge_relevance": 1.0,
+      "judge_citation": 1.0
+    },
+    "attraction": {
+      "count": 6,
+      "recall@5": 0.6666666666666666,
+      "recall@10": 0.6666666666666666,
+      "mrr": 0.6666666666666666,
+      "ndcg@10": 2.547861563886481,
+      "item_name_hit": 0.6666666666666666,
+      "refusal_correct": 1.0,
+      "judge_faithfulness": 3.6666666666666665,
+      "judge_relevance": 3.6666666666666665,
+      "judge_citation": 3.6666666666666665
+    },
+    "itinerary": {
+      "count": 3,
+      "recall@5": 0.0,
+      "recall@10": 0.0,
+      "mrr": 0.0,
+      "ndcg@10": 0.0,
+      "item_name_hit": 0.0,
+      "refusal_correct": 1.0,
+      "judge_faithfulness": 1.0,
+      "judge_relevance": 1.0,
+      "judge_citation": 1.0
+    },
+    "food": {
+      "count": 3,
+      "recall@5": 0.6666666666666666,
+      "recall@10": 0.6666666666666666,
+      "mrr": 0.6666666666666666,
+      "ndcg@10": 2.735986342625645,
+      "item_name_hit": 0.3333333333333333,
+      "refusal_correct": 1.0,
+      "judge_faithfulness": 3.6666666666666665,
+      "judge_relevance": 5.0,
+      "judge_citation": 3.6666666666666665
+    },
+    "hotel": {
+      "count": 2,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 2.959110134866123,
+      "item_name_hit": 1.0,
+      "refusal_correct": 1.0,
+      "judge_faithfulness": 5.0,
+      "judge_relevance": 5.0,
+      "judge_citation": 5.0
+    },
+    "comparison": {
+      "count": 2,
+      "recall@5": 0.0,
+      "recall@10": 0.0,
+      "mrr": 0.0,
+      "ndcg@10": 0.0,
+      "item_name_hit": 1.0,
+      "refusal_correct": 1.0,
+      "judge_faithfulness": 4.0,
+      "judge_relevance": 5.0,
+      "judge_citation": 3.0
+    },
+    "out_of_kb": {
+      "count": 1,
+      "recall@5": 0.0,
+      "recall@10": 0.0,
+      "mrr": 0.0,
+      "ndcg@10": 0.0,
+      "item_name_hit": 0.0,
+      "refusal_correct": 0.0,
+      "judge_faithfulness": 5.0,
+      "judge_relevance": 5.0,
+      "judge_citation": 5.0
+    }
+  }
+}

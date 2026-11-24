@@ -1,19 +1,21 @@
-# atguigu/eval/run_eval.py
+# atguigu/eval/custom/run_eval.py
 """
 评估入口：读测试集 -> 跑查询图 -> 算指标 -> 写结果/汇总/HTML 报告。
 
+这是“自定义评估”方案，和 atguigu/eval/ragas 分开。
+
 用法示例：
     # 只测检索：不生成答案、不调用 Web，速度快、成本低
-    python -m atguigu.eval.run_eval --mode retrieval
+    python -m atguigu.eval.custom.run_eval --mode retrieval
 
     # 端到端：生成答案，并让 LLM judge 打分
-    python -m atguigu.eval.run_eval --mode full
+    python -m atguigu.eval.custom.run_eval --mode full
 
     # 只跑前 5 条，方便调试
-    python -m atguigu.eval.run_eval --mode retrieval --limit 5
+    python -m atguigu.eval.custom.run_eval --mode retrieval --limit 5
 
     # 需要把 Web 搜索也纳入评估时
-    python -m atguigu.eval.run_eval --mode full --enable-web
+    python -m atguigu.eval.custom.run_eval --mode full --enable-web
 
 设计说明：
 - 测试集里 gold_docs 只标到文件级时，同一文件的任意章节都算命中；
@@ -29,9 +31,11 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-from atguigu.eval.judge import judge_answer
-from atguigu.eval.metrics import (
+from atguigu.eval.custom.judge import judge_answer
+from atguigu.eval.custom.metrics import (
     average,
+    context_precision_at_k,
+    context_recall_at_k,
     item_name_hit,
     mrr,
     ndcg_at_k,
@@ -39,14 +43,15 @@ from atguigu.eval.metrics import (
     refusal_correct,
     retrieval_key,
 )
-from atguigu.eval.report import build_report
+from atguigu.eval.custom.report import build_report
 from atguigu.query_process.main_graph import QueryMainGraphRunner
 from atguigu.tool.logger import logger
 from atguigu.tool.milvus_client_tool import get_milvus_client
 from atguigu.tool.mongo_tool import clear_history
 
-# 默认测试集路径：和本文件同目录下的 dataset/travel_eval.jsonl
-DEFAULT_DATASET = Path(__file__).parent / "dataset" / "travel_eval.jsonl"
+# 默认测试集路径：custom 和 ragas 共用 eval/dataset/travel_eval.jsonl
+# custom -> eval/custom，所以要回到上一级再进 dataset
+DEFAULT_DATASET = Path(__file__).parent.parent / "dataset" / "travel_eval.jsonl"
 
 
 def load_dataset(path: Path):
@@ -228,6 +233,19 @@ def run_case(case, mode):
         "recall@10": recall_at_k(retrieved, gold, 10),
         "mrr": mrr(retrieved, gold),
         "ndcg@10": ndcg_at_k(retrieved, gold, 10),
+        # ================================================================
+        # 【五大指标之 Context Recall / Context Precision】
+        # - 拒答题没有 gold，这两项没有意义，返回 None；
+        # - 其他题用 gold 文档/章节做确定性计算，不需要 LLM。
+        # ================================================================
+        "context_recall@10": (
+            None if case.get("expect_refusal")
+            else context_recall_at_k(retrieved, gold, 10)
+        ),
+        "context_precision@10": (
+            None if case.get("expect_refusal")
+            else context_precision_at_k(retrieved, gold, 10)
+        ),
         "item_name_hit": item_name_hit(
             result.get("item_names") or [],
             case.get("gold_item_names", []),
@@ -242,15 +260,20 @@ def run_case(case, mode):
 
     # 只有 full 模式才调用 judge，避免 retrieval 模式产生额外 LLM 成本
     if mode == "full":
+        # 答案节点会使用父块扩展后的内容；judge 也看同一份上下文，
+        # 否则会出现“答案基于父块、judge 只看子块”的口径不一致。
+        judge_docs = result.get("expanded_docs") or reranked_docs
         contexts = [
             doc.get("content") or ""
-            for doc in reranked_docs
+            for doc in judge_docs
         ]
         judge_result = judge_answer(
             question=case["question"],
             answer=answer,
             contexts=contexts,
             gold_facts=case.get("gold_facts", []),
+            # 有参考答案时，judge 才能算 Answer Correctness
+            reference_answer=case.get("reference_answer", ""),
         )
         row.update({
             f"judge_{key}": value
@@ -273,14 +296,19 @@ def summarize(rows, mode, dataset_path):
     errors = [row for row in rows if row["status"] == "error"]
 
     metric_names = [
+        # 五大指标
+        "context_recall@10",
+        "context_precision@10",
+        "judge_faithfulness",
+        "judge_answer_relevancy",
+        "judge_answer_correctness",
+        # 辅助检索指标
         "recall@5",
         "recall@10",
         "mrr",
         "ndcg@10",
         "item_name_hit",
         "refusal_correct",
-        "judge_faithfulness",
-        "judge_relevance",
         "judge_citation",
     ]
 

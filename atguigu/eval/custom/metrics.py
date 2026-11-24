@@ -1,4 +1,4 @@
-# atguigu/eval/metrics.py
+# atguigu/eval/custom/metrics.py
 """
 检索评估指标（纯函数，不连数据库、不调模型）。
 
@@ -133,6 +133,101 @@ def recall_at_k(retrieved: Sequence[RetrievalKey], gold: Sequence[RetrievalKey],
         return 0.0
 
     return _hit_count(retrieved, gold, k) / len(gold)
+
+
+def context_recall_at_k(
+    retrieved: Sequence[RetrievalKey],
+    gold: Sequence[RetrievalKey],
+    k: int,
+) -> float:
+    """
+    Context Recall@k（上下文召回）。
+
+    用大白话：
+    - 标准答案里有多少份文档/章节，被前 k 条召回结果覆盖了；
+    - 它和 Recall@k 在“文档级 gold”下数值一样，但名字对齐 RAGAS 口径，
+      方便和行业指标对话。
+
+    和 RAGAS 的区别：
+    - RAGAS 会用 LLM 把参考答案拆成 claim，再逐条检查有没有被上下文覆盖；
+    - 这里先用 gold 文档/章节做确定性代理，成本低、可复现；
+    - 如果以后要更细的 claim 级 recall，可以再走 RAGAS。
+
+    参数：
+    - retrieved: 召回结果（已排序）
+    - gold: 标准答案文档/章节
+    - k: 只看前 k 条
+
+    返回：
+    - 0~1 的浮点数；gold 为空时返回 0
+    """
+    if not gold:
+        return 0.0
+
+    top_k = retrieved[:k]
+    covered = 0
+
+    for gold_item in gold:
+        if any(is_match(retrieved_item, gold_item) for retrieved_item in top_k):
+            covered += 1
+
+    return covered / len(gold)
+
+
+def context_precision_at_k(
+    retrieved: Sequence[RetrievalKey],
+    gold: Sequence[RetrievalKey],
+    k: int,
+) -> float:
+    """
+    Context Precision@k（上下文精确率）。
+
+    用大白话：
+    - 召回结果里，相关片段是不是排在前面；
+    - 如果相关片段都排在第 1、2 位，分数高；
+    - 如果相关片段排在第 9、10 位，分数低；
+    - 如果前 k 条里一个相关片段都没有，分数是 0。
+
+    计算方式（RAGAS 口径）：
+    - 对每个“相关”的位置 i，算前 i 条里的精确率（相关数 / i）；
+    - 把这些精确率求平均；
+    - 这样既考虑了“有没有相关”，也考虑了“相关得靠不靠前”。
+
+    这是确定性指标，不需要 LLM，适合每次改动都跑。
+
+    参数：
+    - retrieved: 召回结果（已排序）
+    - gold: 标准答案文档/章节
+    - k: 只看前 k 条
+
+    返回：
+    - 0~1 的浮点数
+    """
+    top_k = retrieved[:k]
+    if not top_k or not gold:
+        return 0.0
+
+    # 先标出每个位置是否相关
+    relevant_flags = [
+        any(is_match(retrieved_item, gold_item) for gold_item in gold)
+        for retrieved_item in top_k
+    ]
+
+    total_relevant = sum(relevant_flags)
+    if total_relevant == 0:
+        return 0.0
+
+    precision_sum = 0.0
+    relevant_so_far = 0
+
+    for index, is_relevant in enumerate(relevant_flags, start=1):
+        if not is_relevant:
+            continue
+
+        relevant_so_far += 1
+        precision_sum += relevant_so_far / index
+
+    return precision_sum / total_relevant
 
 
 def mrr(retrieved: Sequence[RetrievalKey], gold: Sequence[RetrievalKey]) -> float:

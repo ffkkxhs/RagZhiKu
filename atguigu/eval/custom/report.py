@@ -1,4 +1,4 @@
-# atguigu/eval/report.py
+# atguigu/eval/custom/report.py
 """
 把评估结果渲染成一个自包含的 HTML 报告。
 
@@ -144,19 +144,21 @@ def _case_row(row: dict) -> str:
           <td>{_escape(row.get("type"))}</td>
           <td>{_escape(status)}</td>
           <td>{_escape(row.get("question"))}</td>
-          <td colspan="4">{_escape(row.get("reason"))}</td>
+          <td colspan="6">{_escape(row.get("reason"))}</td>
         </tr>
         """
 
-    recall5 = row.get("recall@5")
-    mrr_value = row.get("mrr")
+    context_recall = row.get("context_recall@10")
+    context_precision = row.get("context_precision@10")
     faithfulness = row.get("judge_faithfulness")
+    answer_relevancy = row.get("judge_answer_relevancy")
+    answer_correctness = row.get("judge_answer_correctness")
 
-    # 没有召回或 faithfulness 低于 3，标红，方便一眼看到 bad case。
-    # 拒答题本来就没有 gold，Recall@5 必然是 0，不应该因此标红。
+    # 五大指标里任意一个明显异常就标红；拒答题没有 gold，不按召回标红。
     is_bad = not row.get("expect_refusal") and (
-        (isinstance(recall5, (int, float)) and recall5 == 0)
+        (isinstance(context_recall, (int, float)) and context_recall == 0)
         or (isinstance(faithfulness, (int, float)) and faithfulness < 3)
+        or (isinstance(answer_correctness, (int, float)) and answer_correctness < 3)
     )
     row_class = "bad" if is_bad else ""
 
@@ -170,6 +172,15 @@ def _case_row(row: dict) -> str:
         {_format_docs(row.get("retrieved"))}
         <b>识别出的主体名</b>
         <p>{_escape(", ".join(row.get("item_names") or []))}</p>
+        <b>辅助检索指标</b>
+        <p>
+          Recall@5: {_percent(row.get("recall@5"))} ·
+          Recall@10: {_percent(row.get("recall@10"))} ·
+          MRR: {_percent(row.get("mrr"))} ·
+          nDCG@10: {_percent(row.get("ndcg@10"))} ·
+          主体名命中: {_percent(row.get("item_name_hit"))} ·
+          引用: {_score(row.get("judge_citation"))}
+        </p>
         <b>最终回答</b>
         <pre>{_escape(row.get("answer"))}</pre>
         <b>judge 理由</b>
@@ -184,9 +195,11 @@ def _case_row(row: dict) -> str:
       <td>{_escape(row.get("type"))}</td>
       <td>{_escape(row.get("outcome"))}</td>
       <td>{_escape(row.get("question"))}</td>
-      <td>{_percent(recall5)}</td>
-      <td>{_percent(mrr_value)}</td>
+      <td>{_percent(context_recall)}</td>
+      <td>{_percent(context_precision)}</td>
       <td>{_score(faithfulness)}</td>
+      <td>{_score(answer_relevancy)}</td>
+      <td>{_score(answer_correctness)}</td>
       <td>{detail}</td>
     </tr>
     """
@@ -210,16 +223,26 @@ def build_report(results_path: Path, summary_path: Path, output_dir: Path) -> Pa
     by_type = summary.get("by_type", {})
     outcomes = summary.get("outcomes", {})
 
-    # 分题型图表数据
-    recall_by_type = {
-        case_type: values.get("recall@5", 0)
-        for case_type, values in by_type.items()
-    }
-    faithfulness_by_type = {
-        case_type: values.get("judge_faithfulness", 0)
-        for case_type, values in by_type.items()
-        if isinstance(values.get("judge_faithfulness"), (int, float))
-    }
+    # ========================================================================
+    # 【改造说明：报告优先展示“常说的五个指标”】
+    # Context Recall / Context Precision / Faithfulness /
+    # Answer Relevancy / Answer Correctness。
+    # Recall@5、MRR、nDCG 仍然保留，但作为辅助检索指标放在后面。
+    # ========================================================================
+    def by_type_metric(metric_name):
+        """按题型抽取某个指标，供条形图使用；只保留有数值的题型。"""
+        return {
+            case_type: values.get(metric_name, 0)
+            for case_type, values in by_type.items()
+            if isinstance(values.get(metric_name), (int, float))
+        }
+
+    context_recall_by_type = by_type_metric("context_recall@10")
+    context_precision_by_type = by_type_metric("context_precision@10")
+    faithfulness_by_type = by_type_metric("judge_faithfulness")
+    answer_relevancy_by_type = by_type_metric("judge_answer_relevancy")
+    answer_correctness_by_type = by_type_metric("judge_answer_correctness")
+    recall_by_type = by_type_metric("recall@5")
 
     cards = "".join([
         _metric_card("总 case 数", summary.get("total", 0)),
@@ -228,16 +251,28 @@ def build_report(results_path: Path, summary_path: Path, output_dir: Path) -> Pa
         _metric_card("执行失败", summary.get("errors", 0)),
         _metric_card("待选词短路", outcomes.get("clarification", 0)),
         _metric_card("无结果", outcomes.get("no_result", 0)),
-        _metric_card("Recall@5", _percent(overall.get("recall@5"))),
-        _metric_card("Recall@10", _percent(overall.get("recall@10"))),
-        _metric_card("MRR", _percent(overall.get("mrr"))),
+        # 五大指标
+        _metric_card("Context Recall@10", _percent(overall.get("context_recall@10"))),
+        _metric_card("Context Precision@10", _percent(overall.get("context_precision@10"))),
         _metric_card("Faithfulness", _score(overall.get("judge_faithfulness"))),
+        _metric_card("Answer Relevancy", _score(overall.get("judge_answer_relevancy"))),
+        _metric_card("Answer Correctness", _score(overall.get("judge_answer_correctness"))),
+        # 辅助检索指标
+        _metric_card("Recall@5", _percent(overall.get("recall@5"))),
+        _metric_card("MRR", _percent(overall.get("mrr"))),
     ])
 
     charts = ""
-    charts += _bar_chart("分题型 Recall@5", recall_by_type, 1.0)
+    charts += _bar_chart("分题型 Context Recall@10", context_recall_by_type, 1.0)
+    charts += _bar_chart("分题型 Context Precision@10", context_precision_by_type, 1.0)
     if faithfulness_by_type:
         charts += _bar_chart("分题型 Faithfulness（1~5）", faithfulness_by_type, 5.0)
+    if answer_relevancy_by_type:
+        charts += _bar_chart("分题型 Answer Relevancy（1~5）", answer_relevancy_by_type, 5.0)
+    if answer_correctness_by_type:
+        charts += _bar_chart("分题型 Answer Correctness（1~5）", answer_correctness_by_type, 5.0)
+    if recall_by_type:
+        charts += _bar_chart("分题型 Recall@5（辅助）", recall_by_type, 1.0)
 
     case_rows = "".join(_case_row(row) for row in rows)
 
@@ -335,9 +370,11 @@ def build_report(results_path: Path, summary_path: Path, output_dir: Path) -> Pa
           <th>类型</th>
           <th>路径</th>
           <th>问题</th>
-          <th>Recall@5</th>
-          <th>MRR</th>
-          <th>Faithfulness</th>
+          <th>C-Recall</th>
+          <th>C-Precision</th>
+          <th>Faith</th>
+          <th>Ans-Rel</th>
+          <th>Ans-Corr</th>
           <th>明细</th>
         </tr>
       </thead>

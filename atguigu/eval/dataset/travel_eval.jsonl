@@ -1,20 +1,20 @@
-{"id":"cd_transport_001","type":"transport","question":"成都双流机场到市区怎么走","gold_item_names":["成都"],"gold_docs":[{"file_title":"成都交通指南"}],"gold_facts":[],"expect_refusal":false}
-{"id":"cd_attraction_001","type":"attraction","question":"成都有哪些必去景点","gold_item_names":["成都"],"gold_docs":[{"file_title":"成都景点推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"cd_itinerary_001","type":"itinerary","question":"成都周边两日游怎么安排","gold_item_names":["成都"],"gold_docs":[{"file_title":"成都线路推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"cd_food_001","type":"food","question":"成都有什么必吃的美食","gold_item_names":["成都"],"gold_docs":[{"file_title":"成都美食推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"cd_hotel_001","type":"hotel","question":"成都住哪个区域比较方便","gold_item_names":["成都"],"gold_docs":[{"file_title":"成都住宿推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"sy_transport_001","type":"transport","question":"三亚凤凰机场到亚龙湾怎么走","gold_item_names":["三亚"],"gold_docs":[{"file_title":"三亚交通指南"}],"gold_facts":[],"expect_refusal":false}
-{"id":"sy_attraction_001","type":"attraction","question":"三亚有哪些必去景点","gold_item_names":["三亚"],"gold_docs":[{"file_title":"三亚景点推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"sy_itinerary_001","type":"itinerary","question":"三亚四天三晚怎么安排","gold_item_names":["三亚"],"gold_docs":[{"file_title":"三亚线路推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"sy_food_001","type":"food","question":"三亚有什么特色美食","gold_item_names":["三亚"],"gold_docs":[{"file_title":"三亚美食推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"sy_hotel_001","type":"hotel","question":"三亚住哪里比较方便","gold_item_names":["三亚"],"gold_docs":[{"file_title":"三亚住宿推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"xm_attraction_001","type":"attraction","question":"厦门必去景点有哪些","gold_item_names":["厦门"],"gold_docs":[{"file_title":"厦门景点推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"xm_transport_001","type":"transport","question":"厦门北站到鼓浪屿怎么走","gold_item_names":["厦门"],"gold_docs":[{"file_title":"厦门交通指南"}],"gold_facts":[],"expect_refusal":false}
-{"id":"hz_attraction_001","type":"attraction","question":"杭州西湖怎么玩","gold_item_names":["杭州"],"gold_docs":[{"file_title":"杭州景点推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"hz_food_001","type":"food","question":"杭州有什么本地美食","gold_item_names":["杭州"],"gold_docs":[{"file_title":"杭州美食推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"zjj_attraction_001","type":"attraction","question":"张家界必去景点有哪些","gold_item_names":["张家界"],"gold_docs":[{"file_title":"张家界景点推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"yn_attraction_001","type":"attraction","question":"云南第一次去怎么玩","gold_item_names":["云南"],"gold_docs":[{"file_title":"云南景点推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"yn_itinerary_001","type":"itinerary","question":"云南五日游线路怎么安排","gold_item_names":["云南"],"gold_docs":[{"file_title":"云南线路推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"compare_001","type":"comparison","question":"三亚和厦门哪个更适合亲子游","gold_item_names":["三亚","厦门"],"gold_docs":[{"file_title":"三亚景点推荐"},{"file_title":"厦门景点推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"compare_002","type":"comparison","question":"成都和杭州哪个更适合美食游","gold_item_names":["成都","杭州"],"gold_docs":[{"file_title":"成都美食推荐"},{"file_title":"杭州美食推荐"}],"gold_facts":[],"expect_refusal":false}
-{"id":"oob_001","type":"out_of_kb","question":"成都明天天气怎么样","gold_item_names":[],"gold_docs":[],"gold_facts":[],"expect_refusal":true}
+{"id": "cd_transport_001", "type": "transport", "question": "成都双流机场到市区怎么走", "gold_item_names": ["成都"], "gold_docs": [{"file_title": "成都交通指南"}], "gold_facts": [], "expect_refusal": false, "reference_answer": "成都双流机场到市区可乘地铁10号线、机场大巴或出租车/网约车；成都还有天府国际机场，成都东站等高铁站和地铁网络连接市区与主要景点。"}
+{"id": "cd_attraction_001", "type": "attraction", "question": "成都有哪些必去景点", "gold_item_names": ["成都"], "gold_docs": [{"file_title": "成都景点推荐"}], "gold_facts": [], "expect_refusal": false, "reference_answer": "成都必去景点包括成都大熊猫繁育研究基地、宽窄巷子、锦里和武侯祠、春熙路和太古里；周边可安排都江堰、青城山。"}
+{"id": "cd_itinerary_001", "type": "itinerary", "question": "成都周边两日游怎么安排", "gold_item_names": ["成都"], "gold_docs": [{"file_title": "成都线路推荐"}], "gold_facts": [], "expect_refusal": false, "reference_answer": "成都周边两日游可第一天游市区（熊猫基地、宽窄巷子、锦里/武侯祠），第二天去都江堰或青城山；也可按3日经典线路调整为城市漫游、熊猫基地和老城文化。"}
+{"id": "cd_food_001", "type": "food", "question": "成都有什么必吃的美食", "gold_item_names": ["成都"], "gold_docs": [{"file_title": "成都美食推荐"}], "gold_facts": [], "expect_refusal": false, "reference_answer": "成都美食以火锅、串串香、担担面、钟水饺、龙抄手、赖汤圆等川味小吃为代表，茶馆文化也是重要体验。"}
+{"id": "cd_hotel_001", "type": "hotel", "question": "成都住哪个区域比较方便", "gold_item_names": ["成都"], "gold_docs": [{"file_title": "成都住宿推荐"}], "gold_facts": [], "expect_refusal": false, "reference_answer": "成都住宿可优先考虑春熙路、太古里等市中心商圈，地铁便利；也可选择老城区域体验慢生活，商务出行可选交通枢纽附近。"}
+{"id": "sy_transport_001", "type": "transport", "question": "三亚凤凰机场到亚龙湾怎么走", "gold_item_names": ["三亚"], "gold_docs": [{"file_title": "三亚交通指南"}], "gold_facts": [], "expect_refusal": false}
+{"id": "sy_attraction_001", "type": "attraction", "question": "三亚有哪些必去景点", "gold_item_names": ["三亚"], "gold_docs": [{"file_title": "三亚景点推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "sy_itinerary_001", "type": "itinerary", "question": "三亚四天三晚怎么安排", "gold_item_names": ["三亚"], "gold_docs": [{"file_title": "三亚线路推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "sy_food_001", "type": "food", "question": "三亚有什么特色美食", "gold_item_names": ["三亚"], "gold_docs": [{"file_title": "三亚美食推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "sy_hotel_001", "type": "hotel", "question": "三亚住哪里比较方便", "gold_item_names": ["三亚"], "gold_docs": [{"file_title": "三亚住宿推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "xm_attraction_001", "type": "attraction", "question": "厦门必去景点有哪些", "gold_item_names": ["厦门"], "gold_docs": [{"file_title": "厦门景点推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "xm_transport_001", "type": "transport", "question": "厦门北站到鼓浪屿怎么走", "gold_item_names": ["厦门"], "gold_docs": [{"file_title": "厦门交通指南"}], "gold_facts": [], "expect_refusal": false}
+{"id": "hz_attraction_001", "type": "attraction", "question": "杭州西湖怎么玩", "gold_item_names": ["杭州"], "gold_docs": [{"file_title": "杭州景点推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "hz_food_001", "type": "food", "question": "杭州有什么本地美食", "gold_item_names": ["杭州"], "gold_docs": [{"file_title": "杭州美食推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "zjj_attraction_001", "type": "attraction", "question": "张家界必去景点有哪些", "gold_item_names": ["张家界"], "gold_docs": [{"file_title": "张家界景点推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "yn_attraction_001", "type": "attraction", "question": "云南第一次去怎么玩", "gold_item_names": ["云南"], "gold_docs": [{"file_title": "云南景点推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "yn_itinerary_001", "type": "itinerary", "question": "云南五日游线路怎么安排", "gold_item_names": ["云南"], "gold_docs": [{"file_title": "云南线路推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "compare_001", "type": "comparison", "question": "三亚和厦门哪个更适合亲子游", "gold_item_names": ["三亚", "厦门"], "gold_docs": [{"file_title": "三亚景点推荐"}, {"file_title": "厦门景点推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "compare_002", "type": "comparison", "question": "成都和杭州哪个更适合美食游", "gold_item_names": ["成都", "杭州"], "gold_docs": [{"file_title": "成都美食推荐"}, {"file_title": "杭州美食推荐"}], "gold_facts": [], "expect_refusal": false}
+{"id": "oob_001", "type": "out_of_kb", "question": "成都明天天气怎么样", "gold_item_names": [], "gold_docs": [], "gold_facts": [], "expect_refusal": true}

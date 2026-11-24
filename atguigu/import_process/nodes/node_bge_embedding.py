@@ -24,7 +24,19 @@ class NodeBGEEmbedding(NodeBase):
         for i in range(0,len(chunks),3):
             temp_list = chunks[i:i + 3]
 
-            chunks_str_list =  [f"{item.get('item_name')}\n{item.get('content')}" for item in temp_list]
+            # ================================================================
+            # 【改造说明：embedding 输入加入旅游类别】
+            # 原来只拼 item_name + content；现在把 category 也拼进去，
+            # 让“交通/美食/住宿/线路/景点”在向量空间里更可区分。
+            # content 本身已经带 title_path 前缀。
+            # 这是 schema/标签改造的一部分，需要重新向量化。
+            # ================================================================
+            chunks_str_list = []
+            for item in temp_list:
+                labels = item.get("labels") or {}
+                entity = item.get("item_name") or ""
+                category = labels.get("category") or ""
+                chunks_str_list.append(f"{entity}\n{category}\n{item.get('content')}")
 
             vec_list = get_bgem3_embeddings(chunks_str_list)   # todo     +++向量化核心+++
 

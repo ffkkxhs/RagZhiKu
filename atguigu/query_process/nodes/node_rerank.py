@@ -19,6 +19,7 @@ class NodeRerank(NodeBase):
         web_search_docs = state.get("web_search_docs")
         rewritten_query = state.get("rewritten_query")
         item_names = state.get("item_names") or []
+        query_category = state.get("query_category", "")
         strict_filter = state.get("strict_filter", True)
 
         # 用 **item 保留 id / item_name / file_title / part，答案节点才能标来源；
@@ -41,6 +42,33 @@ class NodeRerank(NodeBase):
 
         for item in res:
             merged_chunks[item.get("index")]["score"] = item.get("score")
+
+        # ================================================================
+        # 【改造说明：entity/category 从“硬过滤”改成“软加权”】
+        #
+        # 检索阶段已经不按 item_name 硬过滤；这里用旅游标签做一个小幅加分：
+        # - entity 命中查询主体：+0.02
+        # - category 命中查询类别：+0.01
+        # 分数仍然以 Cross-Encoder 为主，标签只做轻微调整，
+        # 避免主体名抽错时把正确文档直接排除。
+        # ================================================================
+        query_entities = set(item_names)
+
+        for chunk in merged_chunks:
+            score = chunk.get("score")
+            if not isinstance(score, (int, float)):
+                score = 0.0
+
+            labels = chunk.get("labels") or {}
+            entity = labels.get("entity") or chunk.get("item_name")
+            category = labels.get("category")
+
+            if entity and entity in query_entities:
+                score += 0.02
+            if query_category and category == query_category:
+                score += 0.01
+
+            chunk["score"] = score
 
         rerank_chunks = sorted(merged_chunks, key=lambda x: x["score"], reverse=True)
 

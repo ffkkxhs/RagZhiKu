@@ -24,9 +24,6 @@ class NodeSearchEmbeddingHyde(NodeBase):
 
     def process(self, state: QueryGraphState):
         rewritten_query = state.get("rewritten_query")
-        item_names = state.get("item_names")
-        # 与普通检索保持一致：主体名不确定时不硬过滤
-        strict_filter = state.get("strict_filter", True)
 
         llm = init_chat_model(
             model=LLMConfig.llm_default_model,
@@ -53,19 +50,13 @@ class NodeSearchEmbeddingHyde(NodeBase):
         dense = embeddings.get("dense")[0]
         sparse = embeddings.get("sparse")[0]
 
-        # 只有 strict_filter=True 才做硬过滤；否则放宽召回，交给 rerank
-        expr = (
-            f"item_name in {json.dumps(item_names)}"
-            if strict_filter and item_names
-            else None
-        )
-
+        # 与普通检索一致：不以 item_name 做硬过滤，
+        # entity/category 在 rerank 阶段软加权。
         reqs = get_req_list(
             dense_data=dense,
             sparse_data=sparse,
             dense_anns_field="dense_vector",
             sparse_anns_field="sparse_vector",
-            expr=expr
         )
 
         res = hybrid_search(
@@ -74,7 +65,7 @@ class NodeSearchEmbeddingHyde(NodeBase):
             output_fields=[
                 "id", "item_name", "file_title", "content", "title",
                 "title_path", "level", "parent_id", "section_id",
-                "chunk_id", "metadata",
+                "chunk_id", "labels",
             ],
             ranker=(0.7, 0.3)
         )

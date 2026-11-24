@@ -25,6 +25,13 @@ dependencies = [
     "modelscope>=1.40.2",
     "openai-agents>=0.24.0",
     "dashscope>=2.1.0",
+    "ragas>=0.2.15",
+]
+
+# RAGAS 是可选评估方案，不装也能正常跑项目
+[project.optional-dependencies]
+ragas = [
+    "ragas>=0.2,<0.3",
 ]
 
 # 默认源写进项目，别只依赖你机器上的全局 uv.toml

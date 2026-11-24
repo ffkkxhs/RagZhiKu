@@ -1,4 +1,4 @@
-# atguigu/eval/judge.py
+# atguigu/eval/custom/judge.py
 """
 LLM-as-judge：用大模型给最终答案打分。
 
@@ -22,20 +22,24 @@ from atguigu.tool.logger import logger
 
 # 评分标准写在提示词里，所有 case 共用同一套标准，保证可比性
 JUDGE_PROMPT = """
-你是一名严格的 RAG 答案评审员。请根据【问题】【参考答案要点】【检索资料】【模型回答】打分。
+你是一名严格的 RAG 答案评审员。请根据【问题】【参考答案】【检索资料】【模型回答】打分。
 
 评分维度（每项 1~5 分）：
 - faithfulness：回答中的事实是否都能在【检索资料】里找到依据，有没有编造。
   5 = 所有关键事实都有依据；1 = 大量编造。
-- relevance：回答是否切题，有没有答非所问。
+- answer_relevancy：回答是否切题，有没有答非所问。
   5 = 直接回答问题；1 = 完全跑题。
+- answer_correctness：回答和【参考答案】/【关键事实】的一致程度。
+  5 = 关键事实全部正确；1 = 大量错误或与参考答案冲突。
+  如果【参考答案】和【关键事实】都没有提供，这一项返回 null。
 - citation：回答里的来源/章节是否和【检索资料】对得上。
   5 = 引用准确；1 = 引用错误或完全没有依据。
 
 只返回一个 JSON 对象，不要输出 Markdown 代码块，不要输出额外解释：
 {{
   "faithfulness": 1-5,
-  "relevance": 1-5,
+  "answer_relevancy": 1-5,
+  "answer_correctness": 1-5 或 null,
   "citation": 1-5,
   "reason": "一句话说明扣分原因；如果满分就写‘无’"
 }}
@@ -43,7 +47,10 @@ JUDGE_PROMPT = """
 【问题】
 {question}
 
-【参考答案要点】
+【参考答案】
+{reference_answer}
+
+【关键事实】
 {gold_facts}
 
 【检索资料】
@@ -104,7 +111,7 @@ def _clamp_score(value):
     return max(1, min(5, score))
 
 
-def judge_answer(question: str, answer: str, contexts, gold_facts):
+def judge_answer(question: str, answer: str, contexts, gold_facts, reference_answer: str = ""):
     """
     对一条答案做 LLM 判分。
 
@@ -113,23 +120,29 @@ def judge_answer(question: str, answer: str, contexts, gold_facts):
     - answer: 模型最终回答
     - contexts: 检索到的资料文本列表
     - gold_facts: 人工标注的关键事实列表（可以为空）
+    - reference_answer: 人工编写的参考答案（可以为空）
 
     返回：
-    - dict: {"faithfulness": 1-5|None, "relevance": ..., "citation": ..., "reason": ...}
-    - 任何一步失败都返回 None 分数的 dict，不抛异常
+    - dict: faithfulness / answer_relevancy / answer_correctness / citation / reason
+    - 没有参考答案和关键事实时，answer_correctness 返回 None；
+    - 任何一步失败都返回 None 分数的 dict，不抛异常。
     """
     # 空答案直接判 0 分，不值得再花一次 LLM 调用
     if not (answer or "").strip():
         return {
             "faithfulness": None,
-            "relevance": None,
+            "answer_relevancy": None,
+            "answer_correctness": None,
             "citation": None,
             "reason": "答案为空",
         }
 
+    has_reference = bool((reference_answer or "").strip() or gold_facts)
+
     prompt = JUDGE_PROMPT.format(
         question=question,
-        gold_facts="\n".join(gold_facts) if gold_facts else "（未提供，按资料是否自洽判断）",
+        reference_answer=reference_answer or "（未提供）",
+        gold_facts="\n".join(gold_facts) if gold_facts else "（未提供）",
         contexts=_format_contexts(contexts),
         answer=answer,
     )
@@ -147,14 +160,21 @@ def judge_answer(question: str, answer: str, contexts, gold_facts):
         logger.warning(f"judge 调用或解析失败: {error}")
         return {
             "faithfulness": None,
-            "relevance": None,
+            "answer_relevancy": None,
+            "answer_correctness": None,
             "citation": None,
             "reason": f"judge 失败: {error}",
         }
 
     return {
         "faithfulness": _clamp_score(data.get("faithfulness")),
-        "relevance": _clamp_score(data.get("relevance")),
+        "answer_relevancy": _clamp_score(data.get("answer_relevancy")),
+        # 没有参考答案/关键事实时，correctness 没有意义，返回 None
+        "answer_correctness": (
+            _clamp_score(data.get("answer_correctness"))
+            if has_reference
+            else None
+        ),
         "citation": _clamp_score(data.get("citation")),
         "reason": str(data.get("reason", "")),
     }

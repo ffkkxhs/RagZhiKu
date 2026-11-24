@@ -21,8 +21,6 @@ class NodeSearchEmbedding(NodeBase):
 
 
          rewritten_query = state.get("rewritten_query")
-         item_names = state.get("item_names")
-         strict_filter = state.get("strict_filter", True)
 
          embeddings = get_bgem3_embeddings([rewritten_query])
 
@@ -30,38 +28,32 @@ class NodeSearchEmbedding(NodeBase):
          sparse = embeddings.get("sparse")[0]
 
          # ================================================================
-         # 【改造说明：硬过滤改成受 strict_filter 控制的软过滤】
+         # 【改造说明：默认不做 item_name 硬过滤】
          #
-         # 原逻辑只要 item_names 非空就拼 `item_name in [...]`。
-         # 一旦主体名识别错了，正确文档会被直接排除，后面再好的 rerank 也救不回来。
+         # 之前只要 item_names 非空就拼 `item_name in [...]`。
+         # 一旦主体名提取多了、写法不统一、或把多地名串成一个，
+         # 正确文档会被直接排除，rerank 也救不回来。
          #
-         # 新逻辑：
-         # - 主体名确认得很确定（strict_filter=True）才做硬过滤；
-         # - 只是 0.6~0.8 的候选（strict_filter=False）就不加过滤，
-         #   让 dense/sparse 先召回更多候选，交给 rerank 判断。
-         # 这是通用策略，不依赖具体领域。
+         # 现在：
+         # - 检索以 rewritten_query 为准，召回所有文档；
+         # - entity/category 在 rerank 阶段做软加权，不使用 Milvus 硬过滤；
+         # - 只有用户显式选择某个分面时，未来才在 API 层加硬过滤。
          # ================================================================
-         expr = (
-             f"item_name in {json.dumps(item_names)}"
-             if strict_filter and item_names
-             else None
-         )
          reqs = get_req_list(
              dense_data=dense,
              sparse_data=sparse,
              dense_anns_field="dense_vector",
              sparse_anns_field="sparse_vector",
-             expr=expr
          )
 
          res = hybrid_search(
              collection_name=MilvusConfig.chunks_collection,
              reqs=reqs,
-             # 新字段一起带出来，rerank/答案节点才能拿到完整标题路径和元数据
+             # 新字段一起带出来，rerank/答案节点才能拿到完整标题路径和旅游标签
              output_fields=[
                  "id", "item_name", "file_title", "content", "title",
                  "title_path", "level", "parent_id", "section_id",
-                 "chunk_id", "metadata",
+                 "chunk_id", "labels",
              ],
              ranker=(0.6, 0.4)
          )

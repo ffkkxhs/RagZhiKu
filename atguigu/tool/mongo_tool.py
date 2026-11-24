@@ -40,6 +40,73 @@ def get_mongo_tool():
 #     "item_names": [],
 #     "ts": 123
 # }
+# ============================================================================
+# 父块存储（父子切块用）
+#
+# 为什么放 Mongo，而不是 Milvus：
+# - 父块只用于“命中子块后回捞上下文”，不需要向量检索；
+# - 父块是长文本，Mongo 存 JSON 文档比 Milvus 的 VARCHAR 更自然；
+# - parent_id 是稳定 ID，按 ID 批量查询即可。
+# ============================================================================
+parent_tool = None
+
+
+def get_parent_tool():
+    """
+    获取父块集合单例（doc_parents）。
+
+    返回：
+    - pymongo collection 对象
+    """
+    global parent_tool
+    if parent_tool is None:
+        db = get_mongo_client()[MongoConfig.mongo_db_name]
+        parent_tool = db["doc_parents"]
+        # parent_id 用于查询；file_title 用于幂等删除
+        parent_tool.create_index([("parent_id", 1)])
+        parent_tool.create_index([("file_title", 1)])
+    return parent_tool
+
+
+def save_parents(file_title, parents):
+    """
+    按 file_title 幂等保存父块。
+
+    参数：
+    - file_title: 文档名
+    - parents: 父块列表，每条至少包含 parent_id/title_path/content
+    """
+    tool = get_parent_tool()
+    tool.delete_many({"file_title": file_title})
+
+    if not parents:
+        return
+
+    docs = []
+    for parent in parents:
+        doc = dict(parent)
+        doc["file_title"] = file_title
+        docs.append(doc)
+
+    tool.insert_many(docs)
+
+
+def get_parents(parent_ids):
+    """
+    按 parent_id 批量读取父块。
+
+    参数：
+    - parent_ids: parent_id 列表
+
+    返回：
+    - list[dict]：命中的父块；parent_ids 为空时返回空列表
+    """
+    if not parent_ids:
+        return []
+
+    return list(get_parent_tool().find({"parent_id": {"$in": parent_ids}}))
+
+
 # get_recent_messages 根据session_id获取最近的n条消息
 def get_recent_messages(session_id,limit=10):
     mongo_tool = get_mongo_tool()

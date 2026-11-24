@@ -32,7 +32,8 @@ class NodeAnswerOutput(NodeBase):
         answer = state.get("answer") or ""
         task_id = state.get("task_id")
         history_list = state.get("history") or []
-        reranked_docs = state.get("reranked_docs") or []
+        # 优先使用父块扩展后的文档；没有扩展节点时退回 reranked_docs
+        reranked_docs = state.get("expanded_docs") or state.get("reranked_docs") or []
         item_names = state.get("item_names") or []
         rewritten_query = state.get("rewritten_query") or ""
         session_id = state.get("session_id")

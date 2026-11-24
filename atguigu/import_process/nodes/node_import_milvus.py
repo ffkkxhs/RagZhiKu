@@ -7,6 +7,7 @@ from atguigu.config.config import MilvusConfig
 from atguigu.import_process.base import NodeBase
 from atguigu.import_process.state import ImportGraphState
 from atguigu.tool.milvus_client_tool import get_milvus_client
+from atguigu.tool.mongo_tool import save_parents
 from atguigu.tool.json_format_tool import json_format
 from atguigu.tool.logger import logger
 
@@ -78,9 +79,11 @@ class NodeImportMilvus(NodeBase):
                 # - parent_id：父级路径，后续做父块回捞时用
                 # - section_id：章节稳定 ID
                 # - chunk_id：chunk 稳定 ID，方便去重和引用
-                # - metadata：JSON 字段，存任意领域的元数据（城市/书名/课程名/别名...）
+                # - labels：JSON 字段，存旅游领域标签：
+                #   entity/category/granularity/mentioned_entities/confidence
                 #
-                # 这些都是通用字段，不绑定旅游或商品；换领域不需要改 schema。
+                # 注意：这里不是源文档的 `## 元数据`，而是我们自己的标注结果；
+                # 切分/识别节点不读取源文档元数据。
                 # 注意：Milvus 不支持直接给已有集合加字段，
                 # 旧集合需要删除后重新导入（下面有明确检查）。
                 # ============================================================
@@ -103,7 +106,7 @@ class NodeImportMilvus(NodeBase):
                 datatype=DataType.VARCHAR,
                 max_length=100,
             ).add_field(
-                field_name="metadata",
+                field_name="labels",
                 datatype=DataType.JSON,
             ).add_field(
                 field_name = "dense_vector",
@@ -153,7 +156,7 @@ class NodeImportMilvus(NodeBase):
             }
             required_fields = {
                 "title_path", "level", "parent_id",
-                "section_id", "chunk_id", "metadata",
+                "section_id", "chunk_id", "labels",
             }
             missing = required_fields - fields
             if missing:
@@ -184,9 +187,25 @@ class NodeImportMilvus(NodeBase):
             data=chunks,
         )
 
+        # ================================================================
+        # 【父子切块：父块写入 Mongo】
+        #
+        # 父块不参与向量检索，只用于“命中子块后回捞上下文”，
+        # 所以放在 Mongo 的 doc_parents 集合里，按 file_title 幂等覆盖。
+        # ================================================================
+        parents = state.get("parents") or []
+
+        # 父块是“增强项”，不是主链路：
+        # Mongo 写失败时记录警告，但不让整个导入失败；
+        # 查询侧回捞不到父块会自动降级为子块。
+        try:
+            save_parents(file_title, parents)
+        except Exception as error:
+            logger.warning(f"父块写入 Mongo 失败，已跳过: {error}")
 
         return {
             "chunks": chunks,
+            "parents": parents,
         }
 
 

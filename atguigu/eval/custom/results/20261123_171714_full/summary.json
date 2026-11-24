@@ -1,0 +1,103 @@
+{
+  "generated_at": "2026-11-23 17:17:14",
+  "mode": "full",
+  "dataset": "E:\\sgg\\projects\\RagZhiKu\\atguigu\\eval\\dataset\\travel_eval.jsonl",
+  "total": 5,
+  "evaluated": 5,
+  "skipped": 0,
+  "errors": 0,
+  "outcomes": {
+    "retrieved": 5
+  },
+  "overall": {
+    "context_recall@10": 1.0,
+    "context_precision@10": 0.9113668430335096,
+    "judge_faithfulness": 5.0,
+    "judge_answer_relevancy": 5.0,
+    "judge_answer_correctness": 5.0,
+    "recall@5": 1.0,
+    "recall@10": 1.0,
+    "mrr": 0.9,
+    "ndcg@10": 0.9261859507142916,
+    "item_name_hit": 1.0,
+    "refusal_correct": 1.0,
+    "judge_citation": 5.0
+  },
+  "by_type": {
+    "transport": {
+      "count": 1,
+      "context_recall@10": 1.0,
+      "context_precision@10": 1.0,
+      "judge_faithfulness": 5.0,
+      "judge_answer_relevancy": 5.0,
+      "judge_answer_correctness": 0.0,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0,
+      "item_name_hit": 1.0,
+      "refusal_correct": 1.0,
+      "judge_citation": 5.0
+    },
+    "attraction": {
+      "count": 1,
+      "context_recall@10": 1.0,
+      "context_precision@10": 0.9060405643738976,
+      "judge_faithfulness": 5.0,
+      "judge_answer_relevancy": 5.0,
+      "judge_answer_correctness": 5.0,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0,
+      "item_name_hit": 1.0,
+      "refusal_correct": 1.0,
+      "judge_citation": 5.0
+    },
+    "itinerary": {
+      "count": 1,
+      "context_recall@10": 1.0,
+      "context_precision@10": 0.6746031746031745,
+      "judge_faithfulness": 5.0,
+      "judge_answer_relevancy": 5.0,
+      "judge_answer_correctness": 0.0,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 0.5,
+      "ndcg@10": 0.6309297535714575,
+      "item_name_hit": 1.0,
+      "refusal_correct": 1.0,
+      "judge_citation": 5.0
+    },
+    "food": {
+      "count": 1,
+      "context_recall@10": 1.0,
+      "context_precision@10": 1.0,
+      "judge_faithfulness": 5.0,
+      "judge_answer_relevancy": 5.0,
+      "judge_answer_correctness": 5.0,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0,
+      "item_name_hit": 1.0,
+      "refusal_correct": 1.0,
+      "judge_citation": 5.0
+    },
+    "hotel": {
+      "count": 1,
+      "context_recall@10": 1.0,
+      "context_precision@10": 0.9761904761904762,
+      "judge_faithfulness": 5.0,
+      "judge_answer_relevancy": 5.0,
+      "judge_answer_correctness": 0.0,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0,
+      "item_name_hit": 1.0,
+      "refusal_correct": 1.0,
+      "judge_citation": 5.0
+    }
+  }
+}

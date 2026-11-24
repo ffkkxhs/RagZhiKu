@@ -376,6 +376,41 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* 文件夹批量导入栏 */
+        .folder-bar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 18px 0 8px;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            border-radius: 12px;
+        }
+
+        .folder-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #2563eb, #38bdf8);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+            white-space: nowrap;
+        }
+
+        .folder-btn:hover {
+            filter: brightness(1.08);
+        }
+
+        .folder-summary {
+            color: #94a3b8;
+            font-size: 13px;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -389,6 +424,15 @@
         <input type="file" id="fileInput" class="file-input"  accept=".pdf,.md">
     </div>
 
+    <!-- 文件夹批量导入：浏览器选择整个文件夹，前端过滤 .md/.pdf 后逐个上传 -->
+    <div class="folder-bar">
+        <button class="folder-btn" id="folderBtn" type="button">📁 导入整个文件夹</button>
+        <span class="folder-summary" id="folderSummary">
+            选择文件夹后，只会处理 .md 和 .pdf，其他文件跳过；文件会按顺序逐个导入，避免并发拖垮模型。
+        </span>
+        <input type="file" id="folderInput" class="file-input" webkitdirectory multiple>
+    </div>
+
     <div id="fileList" class="file-list">
     </div>
 </div>
@@ -397,6 +441,9 @@
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const fileList = document.getElementById('fileList');
+    const folderInput = document.getElementById('folderInput');
+    const folderBtn = document.getElementById('folderBtn');
+    const folderSummary = document.getElementById('folderSummary');
 
     // 模拟后端API地址
     const API_BASE = 'http://127.0.0.1:8000';
@@ -422,10 +469,96 @@
 
     fileInput.addEventListener('change', (e) => {
         handleFiles(e.target.files);
+        // 允许重复选择同一个文件
+        fileInput.value = '';
     });
 
-    function handleFiles(files) {
-        Array.from(files).forEach(uploadFile);
+    folderBtn.addEventListener('click', () => {
+        folderInput.click();
+    });
+
+    folderInput.addEventListener('change', (e) => {
+        handleFolderFiles(e.target.files);
+        // 允许重复选择同一个文件夹
+        folderInput.value = '';
+    });
+
+    // 只处理 Markdown 和 PDF
+    function isSupportedFile(file) {
+        const name = (file.name || '').toLowerCase();
+        return name.endsWith('.md') || name.endsWith('.pdf');
+    }
+
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (ch) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[ch]));
+    }
+
+    // 单文件/拖拽：按顺序处理，不并发
+    async function handleFiles(files) {
+        const supported = Array.from(files).filter(isSupportedFile);
+        await runQueue(supported);
+    }
+
+    // 串行队列：一个文件完成后再处理下一个，避免多个 BGE 同时加载/推理
+    async function runQueue(files) {
+        for (const file of files) {
+            await uploadFile(file);
+        }
+    }
+
+    // 文件夹导入：过滤、去重、逐个上传
+    async function handleFolderFiles(files) {
+        const allFiles = Array.from(files);
+        const supported = allFiles.filter(isSupportedFile);
+        const skippedByType = allFiles.length - supported.length;
+
+        const seenNames = new Set();
+        const queue = [];
+        let duplicateCount = 0;
+
+        for (const file of supported) {
+            if (seenNames.has(file.name)) {
+                duplicateCount += 1;
+                continue;
+            }
+            seenNames.add(file.name);
+            queue.push(file);
+        }
+
+        const skipped = skippedByType + duplicateCount;
+        let completed = 0;
+        let failed = 0;
+
+        function renderSummary(final = false) {
+            const suffix = final ? '（全部处理完毕）' : '';
+            folderSummary.textContent =
+                `共 ${allFiles.length} 个文件，待导入 ${queue.length} 个，` +
+                `已完成 ${completed}，失败 ${failed}，跳过 ${skipped} ${suffix}`;
+        }
+
+        renderSummary();
+
+        for (const file of queue) {
+            const result = await uploadFile(file);
+            if (result === 'completed') {
+                completed += 1;
+            } else {
+                failed += 1;
+            }
+            renderSummary();
+        }
+
+        renderSummary(true);
     }
 
     function updateProgressUI(wrapper, percentage) {
@@ -451,13 +584,15 @@
         const isPDF = file.name.toLowerCase().endsWith('.pdf');
         // PDF 需要 9 步（含上传），MD 跳过 pdf_to_md 需要 8 步
         const totalNodes = isPDF ? 8 : 7;
+        // 文件夹上传时，保留相对路径用于展示；后端仍然使用 basename 作为文件名
+        const displayName = file.webkitRelativePath || file.name;
 
         const id = 'file-' + Math.random().toString(36).substr(2, 8);
         const html = `
             <div class="file-item" id="${id}">
                 <div class="file-info">
                     <div class="file-header">
-                        <span class="file-name">${file.name}</span>
+                        <span class="file-name">${escapeHtml(displayName)}</span>
                         <span class="file-size">${(file.size / 1024).toFixed(2)} KB</span>
                     </div>
                     <div class="progress-wrapper">
@@ -511,8 +646,8 @@
             statusBadge.textContent = '处理中';
             statusBadge.className = 'status-badge status-processing';
 
-            // 把专属的 totalNodes 传给轮询函数
-            pollStatus(taskId, itemEl, totalNodes);
+            // 等待这个文件真正跑完，再让队列处理下一个
+            return await pollStatus(taskId, itemEl, totalNodes);
 
         } catch (error) {
             console.error(error);
@@ -524,6 +659,7 @@
             errLog.textContent = "❌ 网络请求失败或服务器异常";
             errLog.style.color = "#ef4444";
             logListEl.appendChild(errLog);
+            return 'upload_failed';
         }
     }
 
@@ -605,29 +741,25 @@
         return currentPercentage;
     }
 
-    function pollStatus(taskId, itemEl, totalNodes) {
+    async function pollStatus(taskId, itemEl, totalNodes) {
         const statusBadge = itemEl.querySelector('.status-badge');
         const progressWrapper = itemEl.querySelector('.progress-wrapper');
         const logDetails = itemEl.querySelector('.log-details');
-        let stopped = false;
+        const maxAttempts = 600; // 最多等 15 分钟
 
-        const interval = setInterval(async () => {
-            if (stopped) return;
-
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
             try {
                 const res = await fetch(`${API_BASE}/status/${taskId}`);
                 if (!res.ok) throw new Error('Status request failed');
 
                 const data = await res.json();
 
-                if (stopped) return;
-
-                // 传入 totalNodes 继续计算
-                const calculatedPercentage = renderLogsAndCalculateProgress(itemEl, data.done_list, data.running_list, totalNodes, data.durations);
+                // 传入 totalNodes 继续计算进度
+                const calculatedPercentage = renderLogsAndCalculateProgress(
+                    itemEl, data.done_list, data.running_list, totalNodes, data.durations
+                );
 
                 if (data.status === 'completed') {
-                    stopped = true;
-                    clearInterval(interval);
                     statusBadge.textContent = '已完成';
                     statusBadge.className = 'status-badge status-completed';
                     updateProgressUI(progressWrapper, 100);
@@ -636,9 +768,10 @@
                         logDetails.open = false;
                     }, 1000);
 
-                } else if (data.status === 'failed') {
-                    stopped = true;
-                    clearInterval(interval);
+                    return 'completed';
+                }
+
+                if (data.status === 'failed') {
                     statusBadge.textContent = '失败';
                     statusBadge.className = 'status-badge status-error';
 
@@ -648,13 +781,29 @@
                     errLog.style.color = "#ef4444";
                     logListEl.appendChild(errLog);
 
-                } else if (data.status === 'processing') {
+                    return 'failed';
+                }
+
+                if (data.status === 'processing') {
                     updateProgressUI(progressWrapper, calculatedPercentage);
                 }
             } catch (e) {
                 console.error('Polling error', e);
             }
-        }, 1500);
+
+            await sleep(1500);
+        }
+
+        statusBadge.textContent = '超时';
+        statusBadge.className = 'status-badge status-error';
+
+        const logListEl = itemEl.querySelector('.log-list');
+        const errLog = document.createElement('li');
+        errLog.textContent = "❌ 轮询超时，任务可能仍在后台执行";
+        errLog.style.color = "#ef4444";
+        logListEl.appendChild(errLog);
+
+        return 'failed';
     }
 </script>
 
